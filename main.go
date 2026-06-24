@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 func main() {
-	fmt.Printf("Privet")
+	const IMTpowder float64 = 2
+	userHeight := 1.8
+	userWeight := 100.0
+	IMT := userWeight / math.Pow(userHeight,IMTpowder)
+	fmt.Print(IMT)
 }
