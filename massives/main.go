@@ -1,3 +1,5 @@
+// !Вывести сумму баланса в консоль
+
 package main
 
 import (
@@ -6,10 +8,11 @@ import (
 )
 
 func main() {
-	var transactions []float64
-	fmt.Print("Программа учета транзакций")
+
+	transactions := []float64{}
+	fmt.Println("Программа учета транзакций")
+	fmt.Println("Вводите транзакции (или 'q' для выхода): ")
 	for {
-		fmt.Print("Введите транзакцию (или 'q' для выхода): ")
 		input := getUserInput()
 		if input == "q" || input == "Q" || input == "" {
 			break
@@ -25,7 +28,7 @@ func main() {
 	if len(transactions) > 0 {
 		fmt.Println("Массив введенных транзакций:")
 		fmt.Println(transactions)
-		fmt.Println("Баланс кошелька:", getUserWalletBlance(transactions))
+		fmt.Printf("Сумма баланса: %.2f\n", getUserWalletBalance(transactions))
 	}
 }
 
@@ -35,7 +38,7 @@ func getUserInput() string {
 	return userInputNumber
 }
 
-func getUserWalletBlance(transactions []float64) float64 {
+func getUserWalletBalance(transactions []float64) float64 {
 	balance := 0.0
 	for _, transaction := range transactions {
 		balance += transaction
