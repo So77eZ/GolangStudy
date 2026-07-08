@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-const IMTpower = 2
+const imtPower = 2
 
 func main() {
 	fmt.Println("Калькулятор индекса массы тела")
@@ -39,7 +39,7 @@ func outputResult(imt float64, diagnosis string) {
 }
 
 func calculateIMT(userWeight float64, userHeight float64) float64 {
-	return userWeight / math.Pow(userHeight/100, IMTpower)
+	return userWeight / math.Pow(userHeight/100, imtPower)
 }
 
 func getUserInput() (float64, float64) {

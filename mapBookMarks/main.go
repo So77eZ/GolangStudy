@@ -11,23 +11,36 @@ import (
 // - 1. Посмотреть закладки,
 // - 2. Добавить закладку,
 // - 3. Удалить закладку,
-// - 4. Выход.
+// - 4. Редактировать закладку,
+// - 5. Выход.
 // При выборе пункта 1, выводится список закладок, если их нет, то сообщение "Закладок нет".
 // При выборе пункта 2, 2 поля ввода: название закладки и ссылка. После ввода, закладка добавляется в мапу.
 // При выборе пункта 3, выводится список закладок с их индексами, пользователь вводит индекс закладки,
 // которую хочет удалить. После удаления выводится сообщение "Закладка удалена".
-// При выборе пункта 4, программа завершает работу.
+// При выборе пункта 4, выводится список закладок с их индексами, пользователь вводит индекс закладки,
+// которую хочет редактировать. После редактирования выводится сообщение "Закладка отредактирована".
+// При выборе пункта 5, программа завершает работу.
+type bookmarkStringMap = map[string]string
 
 func main() {
-	bookmarks := make(map[string]string)
-	bookmarks["google"] = "https://www.google.com"
-	bookmarks["youtube"] = "https://www.youtube.com"
-	bookmarks["github"] = "https://github.com"
-	bookmarks["stackoverflow"] = "https://stackoverflow.com"
-	bookmarks["reddit"] = "https://www.reddit.com"
-	bookmarks["wikipedia"] = "https://www.wikipedia.org"
-	bookmarks["lolkek"] = "https://lolkek.ru"
-	bookmarks["yandex"] = "https://yandex.ru"
+	m := make(bookmarkStringMap, 3)
+
+	m["A"] = "1"
+	m["B"] = "2"
+	m["C"] = "3"
+
+	fmt.Println(len(m))
+
+	bookmarks := bookmarkStringMap{
+		"google":        "https://www.google.com",
+		"youtube":       "https://www.youtube.com",
+		"github":        "https://github.com",
+		"stackoverflow": "https://stackoverflow.com",
+		"reddit":        "https://www.reddit.com",
+		"wikipedia":     "https://www.wikipedia.org",
+		"lolkek":        "https://lolkek.ru",
+		"yandex":        "https://yandex.ru",
+	}
 
 	fmt.Println("Программа управления закладками")
 	for {
@@ -63,7 +76,7 @@ func getUserInput() string {
 	return userInput
 }
 
-func menuNavigate(choice int, bookmarks map[string]string) {
+func menuNavigate(choice int, bookmarks bookmarkStringMap) {
 
 	switch choice {
 	case 1:
@@ -72,7 +85,7 @@ func menuNavigate(choice int, bookmarks map[string]string) {
 		fmt.Println("\nВведите название закладки: ")
 
 		bookmarkKey := strings.ToLower(getUserInput())
-		if checkBookmarkExists(bookmarks, bookmarkKey) {
+		if _, exists := bookmarks[bookmarkKey]; exists {
 			fmt.Printf("\nЗакладка '%s' уже существует\n", bookmarkKey)
 			return
 		}
@@ -82,95 +95,72 @@ func menuNavigate(choice int, bookmarks map[string]string) {
 
 		fmt.Printf("\nЗакладка '%s' добавлена\n", bookmarkKey)
 	case 3:
-		if len(bookmarks) == 0 {
-			fmt.Println("Удалять нечего, закладок нет")
-		} else {
-			showBookmarks(bookmarks)
-			fmt.Println("\nВведите номер закладки, которую хотите удалить: ")
-			inputNumber := getUserInput()
-			index, err := strconv.Atoi(inputNumber)
-			if err != nil {
-				fmt.Println("\nОшибка: введите число")
-				return
-			}
-
-			bookmarkKey, err := getKeyByIndex(bookmarks, index)
-			if err != nil {
-				fmt.Printf("\nОшибка: %s\n", err)
-				return
-			} else {
-				delete(bookmarks, bookmarkKey)
-				fmt.Printf("\nЗакладка '%s' удалена\n", bookmarkKey)
-			}
+		bookmarkKey, err := selectBookmarkByIndex(bookmarks, "Удалять нечего, закладок нет")
+		if err != nil {
+			fmt.Printf("\nОшибка: %s\n", err)
+			return
 		}
+		delete(bookmarks, bookmarkKey)
+		fmt.Printf("\nЗакладка '%s' удалена\n", bookmarkKey)
 	case 4:
-		if len(bookmarks) == 0 {
-			fmt.Println("Редактировать нечего, закладок нет")
-		} else {
-			showBookmarks(bookmarks)
-			fmt.Println("\nВведите номер закладки, которую хотите редактировать: ")
-			inputNumber := getUserInput()
-			index, err := strconv.Atoi(inputNumber)
-			if err != nil {
-				fmt.Println("\nОшибка: введите число")
-				return
-			}
-
-			oldKey, err := getKeyByIndex(bookmarks, index)
-			if err != nil {
-				fmt.Printf("\nОшибка: %s\n", err)
-				return
-			}
-			oldValue := bookmarks[oldKey]
-			fmt.Printf("\nВы выбрали закладку '%s' - '%s'\n", oldKey, oldValue)
-
-			fmt.Println("\nЧто вы хотите изменить?")
-			fmt.Println("1. Название")
-			fmt.Println("2. Ссылка")
-			fmt.Println("3. Оба поля")
-
-			editChoice := getUserInput()
-			editChoiceInt, err := strconv.Atoi(editChoice)
-			if err != nil || editChoiceInt < 1 || editChoiceInt > 3 {
-				fmt.Println("\nОшибка: выберите пункты 1, 2 или 3")
-				return
-			}
-
-			newKey := oldKey
-			newValue := oldValue
-
-			if editChoiceInt == 1 || editChoiceInt == 3 {
-				fmt.Println("\nВведите новое название закладки: ")
-				newKeyInput := getUserInput()
-				if newKeyInput != "" {
-					newKey = strings.ToLower(newKeyInput)
-					if newKey != oldKey && checkBookmarkExists(bookmarks, newKey) {
-						fmt.Printf("\nОшибка: закладка '%s' уже существует\n", newKey)
-						return
-					}
-				}
-			}
-			if editChoiceInt == 2 || editChoiceInt == 3 {
-				fmt.Println("\nВведите новую ссылку закладки: ")
-				newValueInput := getUserInput()
-				if newValueInput != "" {
-					newValue = newValueInput
-				}
-			}
-
-			if newKey != oldKey {
-				delete(bookmarks, oldKey)
-				bookmarks[newKey] = newValue
-			} else {
-				bookmarks[oldKey] = newValue
-			}
-
-			fmt.Printf("\nЗакладка '%s' обновлена на '%s' - '%s'\n", oldKey, newKey, newValue)
+		bookmarkKey, err := selectBookmarkByIndex(bookmarks, "Редактировать нечего, закладок нет")
+		if err != nil {
+			fmt.Printf("\nОшибка: %s\n", err)
+			return
 		}
+		fmt.Printf("\nВы выбрали закладку '%s' - '%s'\n", bookmarkKey, bookmarks[bookmarkKey])
+		fmt.Println("\nЧто вы хотите изменить?")
+		fmt.Println("1. Название")
+		fmt.Println("2. Ссылка")
+		fmt.Println("3. Оба поля")
+
+		editChoice := getUserInput()
+		editChoiceInt, err := strconv.Atoi(editChoice)
+		if err != nil || editChoiceInt < 1 || editChoiceInt > 3 {
+			fmt.Println("\nОшибка: выберите пункты 1, 2 или 3")
+			return
+		}
+		oldValue := bookmarks[bookmarkKey]
+		newKey := bookmarkKey
+		newValue := bookmarks[bookmarkKey]
+
+		if editChoiceInt == 1 || editChoiceInt == 3 {
+			fmt.Println("\nВведите новое название закладки: ")
+			newKeyInput := getUserInput()
+			if newKeyInput != "" {
+				newKey = strings.ToLower(newKeyInput)
+				_, exists := bookmarks[newKey]
+				if newKey != bookmarkKey && exists {
+					fmt.Printf("\nОшибка: закладка '%s' уже существует\n", newKey)
+					return
+				}
+			}
+		}
+		if editChoiceInt == 2 || editChoiceInt == 3 {
+			fmt.Println("\nВведите новую ссылку закладки: ")
+			newValueInput := getUserInput()
+			if newValueInput != "" {
+				newValue = newValueInput
+			}
+		}
+
+		if newKey == bookmarkKey && newValue == oldValue {
+			fmt.Println("\nИзменений не внесено")
+			return
+		}
+
+		if newKey != bookmarkKey {
+			delete(bookmarks, bookmarkKey)
+			bookmarks[newKey] = newValue
+		} else {
+			bookmarks[bookmarkKey] = newValue
+		}
+
+		fmt.Printf("\nЗакладка '%s' обновлена на '%s' - '%s'\n", bookmarkKey, newKey, newValue)
 	}
 }
 
-func showBookmarks(bookmarks map[string]string) {
+func showBookmarks(bookmarks bookmarkStringMap) {
 
 	if len(bookmarks) == 0 {
 		fmt.Println("\nЗакладок нет")
@@ -185,12 +175,7 @@ func showBookmarks(bookmarks map[string]string) {
 	}
 }
 
-func checkBookmarkExists(bookmarks map[string]string, bookmarkKey string) bool {
-	_, exists := bookmarks[bookmarkKey]
-	return exists
-}
-
-func getSortedKeys(bookmarks map[string]string) []string {
+func getSortedKeys(bookmarks bookmarkStringMap) []string {
 	keys := make([]string, 0, len(bookmarks))
 	for key := range bookmarks {
 		keys = append(keys, key)
@@ -199,10 +184,24 @@ func getSortedKeys(bookmarks map[string]string) []string {
 	return keys
 }
 
-func getKeyByIndex(bookmarks map[string]string, index int) (string, error) {
+func getKeyByIndex(bookmarks bookmarkStringMap, index int) (string, error) {
 	if index < 1 || index > len(bookmarks) {
 		return "", fmt.Errorf("индекс должен быть от 1 до %d", len(bookmarks))
 	}
 	keys := getSortedKeys(bookmarks)
 	return keys[index-1], nil
+}
+
+func selectBookmarkByIndex(bookmarks bookmarkStringMap, emptyMsg string) (string, error) {
+	if len(bookmarks) == 0 {
+		return "", fmt.Errorf("%s", emptyMsg)
+	}
+	showBookmarks(bookmarks)
+	fmt.Println("\nВведите номер закладки: ")
+	inputNumber := getUserInput()
+	index, err := strconv.Atoi(inputNumber)
+	if err != nil {
+		return "", fmt.Errorf("введите число")
+	}
+	return getKeyByIndex(bookmarks, index)
 }
