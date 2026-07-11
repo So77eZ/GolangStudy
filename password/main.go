@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand/v2"
 )
 
 //объявление структуры для хранения данных аккаунта
@@ -11,7 +12,12 @@ type accoutData struct {
 	url      string
 }
 
+var symbols = []rune("1abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+")
+
 func main() {
+
+	rand.IntN(100)
+
 	UserAccountData := accoutData{}
 
 	fmt.Println("Вход в личный кабинет")
@@ -28,9 +34,7 @@ func main() {
 		}
 		if choice == 2 {
 			fmt.Println("\nПросмотр данных аккаунта")
-			fmt.Println("Login:", UserAccountData.login)
-			fmt.Println("Password:", UserAccountData.password)
-			fmt.Println("URL:", UserAccountData.url)
+			printAccountData(&UserAccountData)
 		}
 		if choice == 3 {
 			fmt.Println("Выход из программы")
@@ -48,11 +52,25 @@ func getUserInput(prompt string) string {
 
 func getAccountData(account *accoutData) {
 	login := getUserInput("Input login: ")
-	password := getUserInput("Input password: ")
+	password := generatePassword(12) //getUserInput("Input password: ")
 	url := getUserInput("Input url: ")
 	*account = accoutData{
 		login:    login,
 		password: password,
 		url:      url,
 	}
+}
+
+func printAccountData(account *accoutData) {
+	fmt.Println("Login:", account.login)
+	fmt.Println("Password:", account.password)
+	fmt.Println("URL:", account.url)
+}
+
+func generatePassword(length int) string {
+	password := make([]rune, length)
+	for i := range password {
+		password[i] = symbols[rand.IntN(len(symbols))]
+	}
+	return string(password)
 }
