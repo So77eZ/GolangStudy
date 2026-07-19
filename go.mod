@@ -1,3 +1,3 @@
-module github.com/So77eZ/GolangStudy
+module GolangCourse
 
 go 1.26.4

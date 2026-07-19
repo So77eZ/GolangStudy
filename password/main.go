@@ -2,41 +2,21 @@ package main
 
 import (
 	"fmt"
-	"math/rand/v2"
+
+	"GolangCourse/password/account"
+	"GolangCourse/password/utils"
 )
-
-//объявление структуры для хранения данных аккаунта
-type accountData struct {
-	login    string
-	password string
-	url      string
-}
-
-func (account *accountData) inputAccountData() {
-	account.login = getUserInput("Input login: ")
-	account.generatePassword()
-	account.url = getUserInput("Input url: ")
-}
-
-func (account accountData) printAccountData() {
-	fmt.Println("Login:", account.login)
-	fmt.Println("Password:", account.password)
-	fmt.Println("URL:", account.url)
-}
-
-// ф-ция генерации пароля для поля "password" в стуктуре accountData.
-func (account *accountData) generatePassword() {
-	var symbols = []rune("1abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+")
-	generatedPassword := make([]rune, 12) //Длинна пароля
-	for i := range generatedPassword {
-		generatedPassword[i] = symbols[rand.IntN(len(symbols))]
-	}
-	account.password = string(generatedPassword)
-}
 
 func main() {
 
-	userAccountData := accountData{}
+	fakeLogin := utils.GetUserInput("Введите логин: ")
+	fakePassword := utils.GetUserInput("Введите пароль: ")
+	fakeURL := utils.GetUserInput("Введите URL: ")
+	userAccountData, err := account.NewAccountWithTimeStamp(fakeLogin, fakePassword, fakeURL) //accountData{}
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	fmt.Println("Вход в личный кабинет")
 	for {
@@ -48,25 +28,18 @@ func main() {
 			continue
 		}
 		if choice == 1 {
-			userAccountData.inputAccountData()
+			userAccountData.InputAccountData()
 			fmt.Println("\nДанные аккаунта добавлены успешно")
 		}
 		if choice == 2 {
 			fmt.Println("\nПросмотр данных аккаунта")
-			userAccountData.printAccountData()
+			userAccountData.PrintAccount()
 		}
 		if choice == 3 {
 			fmt.Println("\nВыход из программы")
 			break
 		}
 	}
-}
-
-func getUserInput(prompt string) string {
-	fmt.Print(prompt)
-	var result string
-	fmt.Scan(&result)
-	return result
 }
 
 func printMenu() {
