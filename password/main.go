@@ -8,43 +8,72 @@ import (
 )
 
 func main() {
-
-	fakeLogin := utils.GetUserInput("Введите логин: ")
-	fakePassword := utils.GetUserInput("Введите пароль: ")
-	fakeURL := utils.GetUserInput("Введите URL: ")
-	userAccountData, err := account.NewAccountWithTimeStamp(fakeLogin, fakePassword, fakeURL) //accountData{}
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
+	// fakeLogin := utils.GetUserInput("Введите логин: ")
+	// fakePassword := utils.GetUserInput("Введите пароль: ")
+	// fakeURL := utils.GetUserInput("Введите URL: ")
+	// userAccountData, err := account.NewAccount(fakeLogin, fakePassword, fakeURL) //accountData{}
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+	// //Первая запись данных аккаунта
+	// files.WriteFile(userAccountData.FormatAccount(), "userAccountData.txt")
 	fmt.Println("Вход в личный кабинет")
+Menu:
 	for {
-		printMenu()
-		var choice int
-		fmt.Scan(&choice)
-		if choice < 1 || choice > 3 {
-			fmt.Println("\nОшибка ввода: выберите пункт меню от 1 до 3")
-			continue
-		}
-		if choice == 1 {
-			userAccountData.InputAccountData()
-			fmt.Println("\nДанные аккаунта добавлены успешно")
-		}
-		if choice == 2 {
-			fmt.Println("\nПросмотр данных аккаунта")
-			userAccountData.PrintAccount()
-		}
-		if choice == 3 {
+		choice := printMenu()
+		fmt.Scanln(&choice)
+		switch choice {
+		case 1:
+			createAccount()
+		case 2:
+			fmt.Println("\nНахождение аккаунта, on constuction")
+			findAccount()
+		case 3:
+			fmt.Println("\nУдаление аккаунта, on constuction")
+			deleteAccount()
+			break Menu
+		default:
 			fmt.Println("\nВыход из программы")
-			break
+			break Menu
 		}
 	}
 }
 
-func printMenu() {
+func findAccount() {
+
+}
+
+func deleteAccount() {
+
+}
+
+func printMenu() int {
+	var userChoice int
 	fmt.Println("\nВыберите действие:")
-	fmt.Println("1. Добавить данные аккаунта")
-	fmt.Println("2. Просмотреть данные аккаунта")
-	fmt.Println("3. Выход")
+	fmt.Println("\n1. Создать аккаунт")
+	fmt.Println("2. Найти аккаунт")
+	fmt.Println("3. Удалить аккаунт")
+	fmt.Println("4. Выход")
+	return userChoice
+}
+
+func createAccount() {
+	Login := utils.GetUserInput("Введите логин: ")
+	Password := utils.GetUserInput("Введите пароль: ")
+	URL := utils.GetUserInput("Введите URL: ")
+	myAccount, err := account.NewAccount(Login, Password, URL)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	vault := account.NewVault()
+	vault.AddAccount(*myAccount)
+	// data, err := vault.ToBytes()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+	// files.WriteFile(data, "data.json")
+	fmt.Println("\nАккаунт успешно создан")
 }
