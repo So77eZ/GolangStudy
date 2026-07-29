@@ -5,9 +5,13 @@ import (
 
 	"GolangCourse/password/account"
 	"GolangCourse/password/utils"
+
+	"github.com/fatih/color"
 )
 
 func main() {
+	vault := account.NewVault()
+	var choise int //Пользователських ввод пункта меню
 	// fakeLogin := utils.GetUserInput("Введите логин: ")
 	// fakePassword := utils.GetUserInput("Введите пароль: ")
 	// fakeURL := utils.GetUserInput("Введите URL: ")
@@ -21,27 +25,42 @@ func main() {
 	fmt.Println("Вход в личный кабинет")
 Menu:
 	for {
-		choice := printMenu()
-		fmt.Scanln(&choice)
-		switch choice {
+		printMenu()
+		_, err := fmt.Scanln(&choise)
+		if err != nil {
+			fmt.Println("Ошибка ввода:", err)
+			continue
+		}
+		switch choise {
 		case 1:
-			createAccount()
+			createAccount(vault)
 		case 2:
 			fmt.Println("\nНахождение аккаунта, on constuction")
-			findAccount()
+			userURLInput := utils.GetUserInput("Введите URL-ссылку на аккаунт")
+			findAccount(userURLInput, vault)
 		case 3:
 			fmt.Println("\nУдаление аккаунта, on constuction")
 			deleteAccount()
 			break Menu
-		default:
+		case 4:
 			fmt.Println("\nВыход из программы")
 			break Menu
+		default:
+			fmt.Printf("Введено неверное значение номера пункта меню: %d\n", choise)
 		}
 	}
 }
 
-func findAccount() {
-
+func findAccount(URL string, vault *account.Vault) {
+	//URL
+	foundedAccounts := vault.FindAccountByURL(URL)
+	if len(foundedAccounts) == 0 {
+		color.Red("Аккаунты с таким URL не найдены")
+	}
+	for _, account := range foundedAccounts {
+		fmt.Println("")
+		account.PrintAccount()
+	}
 }
 
 func deleteAccount() {
@@ -58,7 +77,7 @@ func printMenu() int {
 	return userChoice
 }
 
-func createAccount() {
+func createAccount(vault *account.Vault) {
 	Login := utils.GetUserInput("Введите логин: ")
 	Password := utils.GetUserInput("Введите пароль: ")
 	URL := utils.GetUserInput("Введите URL: ")
@@ -67,7 +86,7 @@ func createAccount() {
 		fmt.Println(err)
 		return
 	}
-	vault := account.NewVault()
+	vault = account.NewVault()
 	vault.AddAccount(*myAccount)
 	// data, err := vault.ToBytes()
 	// if err != nil {

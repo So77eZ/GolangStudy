@@ -3,6 +3,7 @@ package account
 import (
 	"GolangCourse/password/files"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -51,6 +52,18 @@ func (vault *Vault) AddAccount(acc Account) {
 		return
 	}
 	files.WriteFile(data, "data.json")
+}
+
+//FindAccountByURL поиск аккаунта по переданному URL
+func (vault *Vault) FindAccountByURL(URL string) []Account {
+	var foundedAccounts []Account
+	for _, account := range vault.Accounts {
+		isMatched := strings.Contains(account.URL, URL)
+		if isMatched {
+			foundedAccounts = append(foundedAccounts, account)
+		}
+	}
+	return foundedAccounts
 }
 
 // ToBytes сериализует Vault в JSON-байты для последующей записи в файл.

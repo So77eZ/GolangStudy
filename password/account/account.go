@@ -40,7 +40,7 @@ func (account Account) FormatAccount() string {
 }
 
 //PrintAccount - вывести данные аккаунта в консоль с цветом
-func (account Account) PrintAccount() {
+func (account *Account) PrintAccount() {
 
 	color.Blue("Login: " + account.Login)
 	color.Cyan("Password: " + account.Password)
