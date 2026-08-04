@@ -44,14 +44,10 @@ func NewVault() *Vault {
 // и сохраняет хранилище на диск в data.json.
 func (vault *Vault) AddAccount(acc Account) {
 	vault.Accounts = append(vault.Accounts, acc)
-	vault.UpdatedAt = time.Now()
-	data, err := vault.ToBytes()
-	if err != nil {
-		color.Cyan("Ошибка при преобразовании хранилища vault")
+	if err := vault.save(); err != nil {
+		color.Cyan("Ошибка при сохранении хранилища vault")
 		color.Red(err.Error())
-		return
 	}
-	files.WriteFile(data, "data.json")
 }
 
 //FindAccountByURL поиск аккаунта по переданному URL
@@ -64,6 +60,31 @@ func (vault *Vault) FindAccountByURL(URL string) []Account {
 		}
 	}
 	return foundedAccounts
+}
+
+//DeleteAccountByURL удаляет аккаунт по переданному URL
+func (vault *Vault) DeleteAccountByURL(URL string) bool {
+	for i, account := range vault.Accounts {
+		if strings.Contains(account.URL, URL) {
+			// Удаляем аккаунт из среза
+			vault.Accounts = append(vault.Accounts[:i], vault.Accounts[i+1:]...)
+			if err := vault.save(); err != nil {
+				color.Red("Ошибка при сохранении хранилища vault")
+			}
+			return true
+		}
+	}
+	return false
+}
+
+func (vault *Vault) save() error {
+	vault.UpdatedAt = time.Now()
+	data, err := vault.ToBytes()
+	if err != nil {
+		return err
+	}
+	files.WriteFile(data, "data.json")
+	return nil
 }
 
 // ToBytes сериализует Vault в JSON-байты для последующей записи в файл.

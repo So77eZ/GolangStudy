@@ -35,13 +35,13 @@ Menu:
 		case 1:
 			createAccount(vault)
 		case 2:
-			fmt.Println("\nНахождение аккаунта, on constuction")
+			fmt.Println("\nНахождение аккаунта")
 			userURLInput := utils.GetUserInput("Введите URL-ссылку на аккаунт")
 			findAccount(userURLInput, vault)
 		case 3:
-			fmt.Println("\nУдаление аккаунта, on constuction")
-			deleteAccount()
-			break Menu
+			fmt.Println("\nУдаление аккаунта")
+			userURLInput := utils.GetUserInput("Введите URL-ссылку на аккаунт")
+			deleteAccount(userURLInput, vault)
 		case 4:
 			fmt.Println("\nВыход из программы")
 			break Menu
@@ -52,7 +52,6 @@ Menu:
 }
 
 func findAccount(URL string, vault *account.Vault) {
-	//URL
 	foundedAccounts := vault.FindAccountByURL(URL)
 	if len(foundedAccounts) == 0 {
 		color.Red("Аккаунты с таким URL не найдены")
@@ -63,8 +62,12 @@ func findAccount(URL string, vault *account.Vault) {
 	}
 }
 
-func deleteAccount() {
-
+func deleteAccount(URL string, vault *account.Vault) {
+	if vault.DeleteAccountByURL(URL) {
+		color.Green("Аккаунт по URL: " + URL + " Успешно удален")
+	} else {
+		color.Red("Аккаунт по URL: " + URL + " не был найден")
+	}
 }
 
 func printMenu() int {
