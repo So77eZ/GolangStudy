@@ -4,24 +4,15 @@ import (
 	"fmt"
 
 	"GolangCourse/password/account"
+	"GolangCourse/password/files"
 	"GolangCourse/password/utils"
 
 	"github.com/fatih/color"
 )
 
 func main() {
-	vault := account.NewVault()
+	vault := account.NewVault(files.NewJSONdb("data.json"))
 	var choise int //Пользователських ввод пункта меню
-	// fakeLogin := utils.GetUserInput("Введите логин: ")
-	// fakePassword := utils.GetUserInput("Введите пароль: ")
-	// fakeURL := utils.GetUserInput("Введите URL: ")
-	// userAccountData, err := account.NewAccount(fakeLogin, fakePassword, fakeURL) //accountData{}
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-	// //Первая запись данных аккаунта
-	// files.WriteFile(userAccountData.FormatAccount(), "userAccountData.txt")
 	fmt.Println("Вход в личный кабинет")
 Menu:
 	for {
@@ -51,7 +42,7 @@ Menu:
 	}
 }
 
-func findAccount(URL string, vault *account.Vault) {
+func findAccount(URL string, vault *account.VaultWithdb) {
 	foundedAccounts := vault.FindAccountByURL(URL)
 	if len(foundedAccounts) == 0 {
 		color.Red("Аккаунты с таким URL не найдены")
@@ -62,7 +53,7 @@ func findAccount(URL string, vault *account.Vault) {
 	}
 }
 
-func deleteAccount(URL string, vault *account.Vault) {
+func deleteAccount(URL string, vault *account.VaultWithdb) {
 	if vault.DeleteAccountByURL(URL) {
 		color.Green("Аккаунт по URL: " + URL + " Успешно удален")
 	} else {
@@ -80,7 +71,7 @@ func printMenu() int {
 	return userChoice
 }
 
-func createAccount(vault *account.Vault) {
+func createAccount(vault *account.VaultWithdb) {
 	Login := utils.GetUserInput("Введите логин: ")
 	Password := utils.GetUserInput("Введите пароль: ")
 	URL := utils.GetUserInput("Введите URL: ")
@@ -89,13 +80,8 @@ func createAccount(vault *account.Vault) {
 		fmt.Println(err)
 		return
 	}
-	vault = account.NewVault()
+	//vault = account.NewVault(files.NewJSONdb("data.json"))
 	vault.AddAccount(*myAccount)
-	// data, err := vault.ToBytes()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-	// files.WriteFile(data, "data.json")
+
 	fmt.Println("\nАккаунт успешно создан")
 }

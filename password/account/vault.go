@@ -15,15 +15,24 @@ type Vault struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+//VaultWithdb хранилище аккаунтов с привязкой к файлу data.json
+type VaultWithdb struct {
+	Vault
+	db *files.JSONdb
+}
+
 // NewVault создаёт Vault: пытается загрузить данные из data.json,
 // при ошибке чтения или декодирования возвращает пустое хранилище.
-func NewVault() *Vault {
+func NewVault(db *files.JSONdb) *VaultWithdb {
 	// Чтение существующих значений файла data.json
-	file, err := files.ReadFile("data.json")
+	file, err := db.Read()
 	if err != nil {
-		return &Vault{
-			Accounts:  []Account{},
-			UpdatedAt: time.Now(),
+		return &VaultWithdb{
+			Vault: Vault{
+				Accounts:  []Account{},
+				UpdatedAt: time.Now(),
+			},
+			db: db,
 		}
 	}
 	// Декодирование содержимого файла в структуру Vault
@@ -32,17 +41,23 @@ func NewVault() *Vault {
 	if err != nil {
 		color.Cyan("Ошибка при декодировании data.json")
 		color.Red(err.Error())
-		return &Vault{
-			Accounts:  []Account{},
-			UpdatedAt: time.Now(),
+		return &VaultWithdb{
+			Vault: Vault{
+				Accounts:  []Account{},
+				UpdatedAt: time.Now(),
+			},
+			db: db,
 		}
 	}
-	return &vault
+	return &VaultWithdb{
+		Vault: vault,
+		db:    db,
+	}
 }
 
 // AddAccount добавляет acc в список аккаунтов, обновляет UpdatedAt
 // и сохраняет хранилище на диск в data.json.
-func (vault *Vault) AddAccount(acc Account) {
+func (vault *VaultWithdb) AddAccount(acc Account) {
 	vault.Accounts = append(vault.Accounts, acc)
 	if err := vault.save(); err != nil {
 		color.Cyan("Ошибка при сохранении хранилища vault")
@@ -51,7 +66,7 @@ func (vault *Vault) AddAccount(acc Account) {
 }
 
 //FindAccountByURL поиск аккаунта по переданному URL
-func (vault *Vault) FindAccountByURL(URL string) []Account {
+func (vault *VaultWithdb) FindAccountByURL(URL string) []Account {
 	var foundedAccounts []Account
 	for _, account := range vault.Accounts {
 		isMatched := strings.Contains(account.URL, URL)
@@ -63,7 +78,7 @@ func (vault *Vault) FindAccountByURL(URL string) []Account {
 }
 
 //DeleteAccountByURL удаляет аккаунт по переданному URL
-func (vault *Vault) DeleteAccountByURL(URL string) bool {
+func (vault *VaultWithdb) DeleteAccountByURL(URL string) bool {
 	for i, account := range vault.Accounts {
 		if strings.Contains(account.URL, URL) {
 			// Удаляем аккаунт из среза
@@ -77,14 +92,13 @@ func (vault *Vault) DeleteAccountByURL(URL string) bool {
 	return false
 }
 
-func (vault *Vault) save() error {
+func (vault *VaultWithdb) save() error {
 	vault.UpdatedAt = time.Now()
-	data, err := vault.ToBytes()
+	data, err := vault.Vault.ToBytes()
 	if err != nil {
 		return err
 	}
-	files.WriteFile(data, "data.json")
-	return nil
+	return vault.db.Write(data)
 }
 
 // ToBytes сериализует Vault в JSON-байты для последующей записи в файл.
