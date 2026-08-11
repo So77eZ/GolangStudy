@@ -4,6 +4,9 @@ import (
 	"fmt"
 
 	"GolangCourse/password/account"
+	"GolangCourse/password/output"
+
+	//"GolangCourse/password/cloude"
 	"GolangCourse/password/files"
 	"GolangCourse/password/utils"
 
@@ -12,6 +15,8 @@ import (
 
 func main() {
 	vault := account.NewVault(files.NewJSONdb("data.json"))
+	// или
+	//vault := account.NewVault(cloude.NewCloudeDb("https://exampleCloudStorage.com"))
 	var choise int //Пользователських ввод пункта меню
 	fmt.Println("Вход в личный кабинет")
 Menu:
@@ -19,7 +24,7 @@ Menu:
 		printMenu()
 		_, err := fmt.Scanln(&choise)
 		if err != nil {
-			fmt.Println("Ошибка ввода:", err)
+			output.PrintError("Пожалуйста, введите корректное число для выбора пункта меню.")
 			continue
 		}
 		switch choise {
@@ -45,7 +50,7 @@ Menu:
 func findAccount(URL string, vault *account.VaultWithdb) {
 	foundedAccounts := vault.FindAccountByURL(URL)
 	if len(foundedAccounts) == 0 {
-		color.Red("Аккаунты с таким URL не найдены")
+		output.PrintError("Аккаунты с таким URL не найдены")
 	}
 	for _, account := range foundedAccounts {
 		fmt.Println("")
@@ -57,7 +62,7 @@ func deleteAccount(URL string, vault *account.VaultWithdb) {
 	if vault.DeleteAccountByURL(URL) {
 		color.Green("Аккаунт по URL: " + URL + " Успешно удален")
 	} else {
-		color.Red("Аккаунт по URL: " + URL + " не был найден")
+		output.PrintError("Аккаунт по URL: " + URL + " не был найден")
 	}
 }
 
@@ -77,10 +82,9 @@ func createAccount(vault *account.VaultWithdb) {
 	URL := utils.GetUserInput("Введите URL: ")
 	myAccount, err := account.NewAccount(Login, Password, URL)
 	if err != nil {
-		fmt.Println(err)
+		output.PrintError("Неверный формат URL или Логин")
 		return
 	}
-	//vault = account.NewVault(files.NewJSONdb("data.json"))
 	vault.AddAccount(*myAccount)
 
 	fmt.Println("\nАккаунт успешно создан")

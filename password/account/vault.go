@@ -1,12 +1,10 @@
 package account
 
 import (
-	"GolangCourse/password/files"
+	"GolangCourse/password/output"
 	"encoding/json"
 	"strings"
 	"time"
-
-	"github.com/fatih/color"
 )
 
 //Vault хранилище аккаунтов
@@ -18,12 +16,28 @@ type Vault struct {
 //VaultWithdb хранилище аккаунтов с привязкой к файлу data.json
 type VaultWithdb struct {
 	Vault
-	db *files.JSONdb
+	db Db
+}
+
+// Db интерфейс для работы с хранилищем данных (например, JSON-файл или облачное хранилище)
+type Db interface {
+	ByteReader
+	ByteWriter
+}
+
+// ByteReader интерфейс для чтения данных в виде байтов
+type ByteReader interface {
+	Read() ([]byte, error)
+}
+
+// ByteWriter интерфейс для записи данных в виде байтов
+type ByteWriter interface {
+	Write([]byte) error
 }
 
 // NewVault создаёт Vault: пытается загрузить данные из data.json,
 // при ошибке чтения или декодирования возвращает пустое хранилище.
-func NewVault(db *files.JSONdb) *VaultWithdb {
+func NewVault(db Db) *VaultWithdb {
 	// Чтение существующих значений файла data.json
 	file, err := db.Read()
 	if err != nil {
@@ -39,8 +53,8 @@ func NewVault(db *files.JSONdb) *VaultWithdb {
 	var vault Vault
 	err = json.Unmarshal(file, &vault)
 	if err != nil {
-		color.Cyan("Ошибка при декодировании data.json")
-		color.Red(err.Error())
+		output.PrintError("Ошибка при декодировании data.json")
+		output.PrintError(err.Error())
 		return &VaultWithdb{
 			Vault: Vault{
 				Accounts:  []Account{},
@@ -60,8 +74,8 @@ func NewVault(db *files.JSONdb) *VaultWithdb {
 func (vault *VaultWithdb) AddAccount(acc Account) {
 	vault.Accounts = append(vault.Accounts, acc)
 	if err := vault.save(); err != nil {
-		color.Cyan("Ошибка при сохранении хранилища vault")
-		color.Red(err.Error())
+		output.PrintError("Ошибка при сохранении хранилища vault")
+		output.PrintError(err.Error())
 	}
 }
 
@@ -84,7 +98,8 @@ func (vault *VaultWithdb) DeleteAccountByURL(URL string) bool {
 			// Удаляем аккаунт из среза
 			vault.Accounts = append(vault.Accounts[:i], vault.Accounts[i+1:]...)
 			if err := vault.save(); err != nil {
-				color.Red("Ошибка при сохранении хранилища vault")
+				output.PrintError("Ошибка при удалении аккаунта по переданному URL: " + URL)
+				output.PrintError(err.Error())
 			}
 			return true
 		}
@@ -96,6 +111,7 @@ func (vault *VaultWithdb) save() error {
 	vault.UpdatedAt = time.Now()
 	data, err := vault.Vault.ToBytes()
 	if err != nil {
+		output.PrintError(err.Error())
 		return err
 	}
 	return vault.db.Write(data)

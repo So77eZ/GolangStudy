@@ -1,6 +1,7 @@
 package files
 
 import (
+	"GolangCourse/password/output"
 	"fmt"
 	"os"
 )
@@ -22,6 +23,7 @@ func (db *JSONdb) Write(content []byte) error {
 	file, err := os.Create(db.filename)
 	if err != nil {
 		//fmt.Println("Не удалось создать файл! ", err)
+		output.PrintError("Не удалось создать файл! ")
 		return err
 	}
 	defer file.Close() // При выполнении всего стэка - произойдет вызов через defer ф-ции file.Close()
@@ -29,6 +31,7 @@ func (db *JSONdb) Write(content []byte) error {
 	_, err = file.Write(content)
 	if err != nil {
 		//fmt.Println("Не удалось записать файл! ", err)
+		output.PrintError("Не удалось записать файл! ")
 		return err
 	}
 	//fmt.Println("Файл успешно создан и записан!")
