@@ -17,32 +17,37 @@ func main() {
 	vault := account.NewVault(files.NewJSONdb("data.json"))
 	// или
 	//vault := account.NewVault(cloude.NewCloudeDb("https://exampleCloudStorage.com"))
-	var choise int //Пользователських ввод пункта меню
 	fmt.Println("Вход в личный кабинет")
 Menu:
 	for {
-		printMenu()
-		_, err := fmt.Scanln(&choise)
+		variant := utils.GetUserInput([]string{
+			"1. Создать аккаунт",
+			"2. Найти аккаунт",
+			"3. Удалить аккаунт",
+			"4. Выход",
+			"Выберите вариант",
+		})
+		_, err := fmt.Scanln(&variant)
 		if err != nil {
 			output.PrintError("Пожалуйста, введите корректное число для выбора пункта меню.")
 			continue
 		}
-		switch choise {
-		case 1:
+		switch variant {
+		case "1":
 			createAccount(vault)
-		case 2:
+		case "2":
 			fmt.Println("\nНахождение аккаунта")
-			userURLInput := utils.GetUserInput("Введите URL-ссылку на аккаунт")
+			userURLInput := utils.GetUserInput([]string{"Введите URL-ссылку на аккаунт"})
 			findAccount(userURLInput, vault)
-		case 3:
+		case "3":
 			fmt.Println("\nУдаление аккаунта")
-			userURLInput := utils.GetUserInput("Введите URL-ссылку на аккаунт")
+			userURLInput := utils.GetUserInput([]string{"Введите URL-ссылку на аккаунт"})
 			deleteAccount(userURLInput, vault)
-		case 4:
+		case "4":
 			fmt.Println("\nВыход из программы")
 			break Menu
 		default:
-			fmt.Printf("Введено неверное значение номера пункта меню: %d\n", choise)
+			fmt.Printf("Введено неверное значение номера пункта меню: %s\n", variant)
 		}
 	}
 }
@@ -66,20 +71,10 @@ func deleteAccount(URL string, vault *account.VaultWithdb) {
 	}
 }
 
-func printMenu() int {
-	var userChoice int
-	fmt.Println("\nВыберите действие:")
-	fmt.Println("\n1. Создать аккаунт")
-	fmt.Println("2. Найти аккаунт")
-	fmt.Println("3. Удалить аккаунт")
-	fmt.Println("4. Выход")
-	return userChoice
-}
-
 func createAccount(vault *account.VaultWithdb) {
-	Login := utils.GetUserInput("Введите логин: ")
-	Password := utils.GetUserInput("Введите пароль: ")
-	URL := utils.GetUserInput("Введите URL: ")
+	Login := utils.GetUserInput([]string{"Введите логин: "})
+	Password := utils.GetUserInput([]string{"Введите пароль: "})
+	URL := utils.GetUserInput([]string{"Введите URL: "})
 	myAccount, err := account.NewAccount(Login, Password, URL)
 	if err != nil {
 		output.PrintError("Неверный формат URL или Логин")

@@ -2,8 +2,9 @@ package files
 
 import (
 	"GolangCourse/password/output"
-	"fmt"
 	"os"
+
+	"github.com/fatih/color"
 )
 
 //JSONdb - структура для работы с JSON файлами
@@ -34,7 +35,7 @@ func (db *JSONdb) Write(content []byte) error {
 		output.PrintError("Не удалось записать файл! ")
 		return err
 	}
-	//fmt.Println("Файл успешно создан и записан!")
+	color.Green("Файл успешно создан и записан!")
 	return nil
 }
 
@@ -42,7 +43,7 @@ func (db *JSONdb) Write(content []byte) error {
 func (db *JSONdb) Read() ([]byte, error) {
 	data, err := os.ReadFile(db.filename)
 	if err != nil {
-		fmt.Println(err)
+		output.PrintError("Не удалось прочитать файл! ")
 		return nil, err
 	}
 	return data, nil

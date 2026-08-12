@@ -25,9 +25,9 @@ type Account struct {
 
 //InputAccountData Ввод данных аккаунта
 func (account *Account) InputAccountData() {
-	account.Login = utils.GetUserInput("Input login: ")
+	account.Login = utils.GetUserInput([]string{"Input login: "})
 	account.generatePassword()
-	account.URL = utils.GetUserInput("Input url: ")
+	account.URL = utils.GetUserInput([]string{"Input url: "})
 }
 
 //FormatAccount - собрать данные аккаунта в текстовое представление
