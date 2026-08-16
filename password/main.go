@@ -16,8 +16,10 @@ import (
 
 var menu = map[string]func(*account.VaultWithdb){
 	"1": createAccount,
-	"2": findAccount,
-	"3": deleteAccount,
+	"2": findAccountByURL,
+	"3": findAccountByLogin,
+	"4": deleteAccount,
+	"5": exitFromMenu,
 }
 
 func main() {
@@ -28,22 +30,27 @@ func main() {
 Menu:
 	for {
 		variant := utils.GetUserInput([]string{
+			" ",
 			"1. Создать аккаунт",
-			"2. Найти аккаунт",
-			"3. Удалить аккаунт",
-			"4. Выход",
-			"Выберите вариант",
+			"2. Найти аккаунт по URL",
+			"3. Найти аккаунт по Login",
+			"4. Удалить аккаунт",
+			"5. Выход",
+			" ",
+			"Выбранный вариант",
 		})
 		menuFunc := menu[variant]
 		if menuFunc == nil {
+			output.PrintError("Пожалуйста, введите корректное число для выбора пункта меню.")
 			break Menu
 		}
 		menuFunc(vault)
-		_, err := fmt.Scanln(&variant)
-		if err != nil {
-			output.PrintError("Пожалуйста, введите корректное число для выбора пункта меню.")
-			continue
-		}
+
+		// _, err := fmt.Scanln(&variant)
+		// if err != nil {
+		// 	output.PrintError("Пожалуйста, введите корректное число для выбора пункта меню.")
+		// 	continue
+		// }
 		// switch variant {
 		// case "1":
 		// 	createAccount(vault)
@@ -60,21 +67,36 @@ Menu:
 	}
 }
 
-// findAccount ф-ция нахождения аккаунта по переданным параметрам
-func findAccount(vault *account.VaultWithdb) {
-	fmt.Println("\nНахождение аккаунта")
+// findAccountByURL ф-ция нахождения аккаунта по URl
+func findAccountByURL(vault *account.VaultWithdb) {
+	fmt.Println("\nНахождение аккаунта по URL")
 	userURLInput := utils.GetUserInput([]string{"Введите URL-ссылку на аккаунт"})
 	// анонимная ф-ция нахождения аккаунта по переданному URL
 	foundedAccounts := vault.FindAccounts(userURLInput, func(acc account.Account, str string) bool {
 		return strings.Contains(acc.URL, str)
 	})
-	if len(foundedAccounts) == 0 {
-		output.PrintError("Аккаунты с таким URL не найдены")
+	outputResulats(&foundedAccounts)
+}
+
+func outputResulats(accounts *[]account.Account) {
+	if len(*accounts) == 0 {
+		output.PrintError("Аккаунтов не найдено")
 	}
-	for _, account := range foundedAccounts {
+	for _, account := range *accounts {
 		fmt.Println("")
 		account.PrintAccount()
 	}
+}
+
+// findAccountByLogin ф-ция нахождения аккаунта по URl
+func findAccountByLogin(vault *account.VaultWithdb) {
+	fmt.Println("\nНахождение аккаунта по логину")
+	userLoginInput := utils.GetUserInput([]string{"Введите Login аккаунта"})
+	// анонимная ф-ция нахождения аккаунта по переданному URL
+	foundedAccounts := vault.FindAccounts(userLoginInput, func(acc account.Account, str string) bool {
+		return strings.Contains(acc.Login, str)
+	})
+	outputResulats(&foundedAccounts)
 }
 
 // checkLogin ф-ция нахождения аккаунта по переданному логину
@@ -104,4 +126,8 @@ func createAccount(vault *account.VaultWithdb) {
 	vault.AddAccount(*myAccount)
 
 	fmt.Println("\nАккаунт успешно создан")
+}
+
+func exitFromMenu(vault *account.VaultWithdb) {
+	color.HiGreen("Выход из меню")
 }
