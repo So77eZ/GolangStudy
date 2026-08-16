@@ -79,11 +79,11 @@ func (vault *VaultWithdb) AddAccount(acc Account) {
 	}
 }
 
-//FindAccountByURL поиск аккаунта по переданному URL
-func (vault *VaultWithdb) FindAccountByURL(URL string) []Account {
+//FindAccounts поиск аккаунта по переданным параметрам
+func (vault *VaultWithdb) FindAccounts(str string, checker func(Account, string) bool) []Account {
 	var foundedAccounts []Account
 	for _, account := range vault.Accounts {
-		isMatched := strings.Contains(account.URL, URL)
+		isMatched := checker(account, str)
 		if isMatched {
 			foundedAccounts = append(foundedAccounts, account)
 		}

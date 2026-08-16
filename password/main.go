@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"GolangCourse/password/account"
 	"GolangCourse/password/output"
@@ -12,6 +13,12 @@ import (
 
 	"github.com/fatih/color"
 )
+
+var menu = map[string]func(*account.VaultWithdb){
+	"1": createAccount,
+	"2": findAccount,
+	"3": deleteAccount,
+}
 
 func main() {
 	vault := account.NewVault(files.NewJSONdb("data.json"))
@@ -27,33 +34,40 @@ Menu:
 			"4. Выход",
 			"Выберите вариант",
 		})
+		menuFunc := menu[variant]
+		if menuFunc == nil {
+			break Menu
+		}
+		menuFunc(vault)
 		_, err := fmt.Scanln(&variant)
 		if err != nil {
 			output.PrintError("Пожалуйста, введите корректное число для выбора пункта меню.")
 			continue
 		}
-		switch variant {
-		case "1":
-			createAccount(vault)
-		case "2":
-			fmt.Println("\nНахождение аккаунта")
-			userURLInput := utils.GetUserInput([]string{"Введите URL-ссылку на аккаунт"})
-			findAccount(userURLInput, vault)
-		case "3":
-			fmt.Println("\nУдаление аккаунта")
-			userURLInput := utils.GetUserInput([]string{"Введите URL-ссылку на аккаунт"})
-			deleteAccount(userURLInput, vault)
-		case "4":
-			fmt.Println("\nВыход из программы")
-			break Menu
-		default:
-			fmt.Printf("Введено неверное значение номера пункта меню: %s\n", variant)
-		}
+		// switch variant {
+		// case "1":
+		// 	createAccount(vault)
+		// case "2":
+		// 	findAccount(vault)
+		// case "3":
+		// 	deleteAccount(vault)
+		// case "4":
+		// 	fmt.Println("\nВыход из программы")
+		// 	break Menu
+		// default:
+		// 	fmt.Printf("Введено неверное значение номера пункта меню: %s\n", variant)
+		// }
 	}
 }
 
-func findAccount(URL string, vault *account.VaultWithdb) {
-	foundedAccounts := vault.FindAccountByURL(URL)
+// findAccount ф-ция нахождения аккаунта по переданным параметрам
+func findAccount(vault *account.VaultWithdb) {
+	fmt.Println("\nНахождение аккаунта")
+	userURLInput := utils.GetUserInput([]string{"Введите URL-ссылку на аккаунт"})
+	// анонимная ф-ция нахождения аккаунта по переданному URL
+	foundedAccounts := vault.FindAccounts(userURLInput, func(acc account.Account, str string) bool {
+		return strings.Contains(acc.URL, str)
+	})
 	if len(foundedAccounts) == 0 {
 		output.PrintError("Аккаунты с таким URL не найдены")
 	}
@@ -63,11 +77,18 @@ func findAccount(URL string, vault *account.VaultWithdb) {
 	}
 }
 
-func deleteAccount(URL string, vault *account.VaultWithdb) {
-	if vault.DeleteAccountByURL(URL) {
-		color.Green("Аккаунт по URL: " + URL + " Успешно удален")
+// checkLogin ф-ция нахождения аккаунта по переданному логину
+func checkLogin(acc account.Account, str string) bool {
+	return strings.Contains(acc.Login, str)
+}
+
+func deleteAccount(vault *account.VaultWithdb) {
+	fmt.Println("\nУдаление аккаунта")
+	userURLInput := utils.GetUserInput([]string{"Введите URL-ссылку на аккаунт"})
+	if vault.DeleteAccountByURL(userURLInput) {
+		color.Green("Аккаунт по URL: " + userURLInput + " Успешно удален")
 	} else {
-		output.PrintError("Аккаунт по URL: " + URL + " не был найден")
+		output.PrintError("Аккаунт по URL: " + userURLInput + " не был найден")
 	}
 }
 
