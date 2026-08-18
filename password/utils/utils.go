@@ -5,7 +5,7 @@ import (
 )
 
 //GetUserInput - получение пользовательского ввода из консоли по параметру запроса
-func GetUserInput[T any](prompt []T) string {
+func GetUserInput(prompt ...any) string {
 	for index, value := range prompt {
 		if index == len(prompt)-1 {
 			fmt.Printf("%v: ", value)

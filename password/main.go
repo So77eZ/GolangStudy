@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"GolangCourse/password/account"
@@ -12,6 +13,7 @@ import (
 	"GolangCourse/password/utils"
 
 	"github.com/fatih/color"
+	"github.com/joho/godotenv"
 )
 
 var menu = map[string]func(*account.VaultWithdb){
@@ -24,12 +26,23 @@ var menu = map[string]func(*account.VaultWithdb){
 
 func main() {
 	vault := account.NewVault(files.NewJSONdb("data.json"))
+	err := godotenv.Load("../.env")
+	if err != nil {
+		output.PrintError("Не прочитался файл окружения: ")
+		output.PrintError(err.Error())
+	}
+	res := os.Getenv("VAR")
+	fmt.Println("env.: ", res)
+	for _, e := range os.Environ() {
+		pair := strings.SplitN(e, "=", 2)
+		fmt.Println(pair[0], " = ", pair[1])
+	}
 	// или
 	//vault := account.NewVault(cloude.NewCloudeDb("https://exampleCloudStorage.com"))
 	fmt.Println("Вход в личный кабинет")
 Menu:
 	for {
-		variant := utils.GetUserInput([]string{
+		variant := utils.GetUserInput(
 			" ",
 			"1. Создать аккаунт",
 			"2. Найти аккаунт по URL",
@@ -38,7 +51,7 @@ Menu:
 			"5. Выход",
 			" ",
 			"Выбранный вариант",
-		})
+		)
 		menuFunc := menu[variant]
 		if menuFunc == nil {
 			output.PrintError("Пожалуйста, введите корректное число для выбора пункта меню.")
@@ -70,15 +83,15 @@ Menu:
 // findAccountByURL ф-ция нахождения аккаунта по URl
 func findAccountByURL(vault *account.VaultWithdb) {
 	fmt.Println("\nНахождение аккаунта по URL")
-	userURLInput := utils.GetUserInput([]string{"Введите URL-ссылку на аккаунт"})
+	userURLInput := utils.GetUserInput("Введите URL-ссылку на аккаунт")
 	// анонимная ф-ция нахождения аккаунта по переданному URL
 	foundedAccounts := vault.FindAccounts(userURLInput, func(acc account.Account, str string) bool {
 		return strings.Contains(acc.URL, str)
 	})
-	outputResulats(&foundedAccounts)
+	outputResults(&foundedAccounts)
 }
 
-func outputResulats(accounts *[]account.Account) {
+func outputResults(accounts *[]account.Account) {
 	if len(*accounts) == 0 {
 		output.PrintError("Аккаунтов не найдено")
 	}
@@ -91,12 +104,12 @@ func outputResulats(accounts *[]account.Account) {
 // findAccountByLogin ф-ция нахождения аккаунта по URl
 func findAccountByLogin(vault *account.VaultWithdb) {
 	fmt.Println("\nНахождение аккаунта по логину")
-	userLoginInput := utils.GetUserInput([]string{"Введите Login аккаунта"})
+	userLoginInput := utils.GetUserInput("Введите Login аккаунта")
 	// анонимная ф-ция нахождения аккаунта по переданному URL
 	foundedAccounts := vault.FindAccounts(userLoginInput, func(acc account.Account, str string) bool {
 		return strings.Contains(acc.Login, str)
 	})
-	outputResulats(&foundedAccounts)
+	outputResults(&foundedAccounts)
 }
 
 // checkLogin ф-ция нахождения аккаунта по переданному логину
@@ -106,7 +119,7 @@ func checkLogin(acc account.Account, str string) bool {
 
 func deleteAccount(vault *account.VaultWithdb) {
 	fmt.Println("\nУдаление аккаунта")
-	userURLInput := utils.GetUserInput([]string{"Введите URL-ссылку на аккаунт"})
+	userURLInput := utils.GetUserInput("Введите URL-ссылку на аккаунт")
 	if vault.DeleteAccountByURL(userURLInput) {
 		color.Green("Аккаунт по URL: " + userURLInput + " Успешно удален")
 	} else {
@@ -115,9 +128,9 @@ func deleteAccount(vault *account.VaultWithdb) {
 }
 
 func createAccount(vault *account.VaultWithdb) {
-	Login := utils.GetUserInput([]string{"Введите логин: "})
-	Password := utils.GetUserInput([]string{"Введите пароль: "})
-	URL := utils.GetUserInput([]string{"Введите URL: "})
+	Login := utils.GetUserInput("Введите логин: ")
+	Password := utils.GetUserInput("Введите пароль: ")
+	URL := utils.GetUserInput("Введите URL: ")
 	myAccount, err := account.NewAccount(Login, Password, URL)
 	if err != nil {
 		output.PrintError("Неверный формат URL или Логин")

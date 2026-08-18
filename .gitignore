@@ -2,3 +2,4 @@ GolangStudy.exe
 data.json
 go.mod
 go.sum
+**/.env
