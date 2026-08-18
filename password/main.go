@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"GolangCourse/password/account"
+	"GolangCourse/password/encrypter"
 	"GolangCourse/password/output"
 
 	//"GolangCourse/password/cloude"
@@ -25,17 +25,11 @@ var menu = map[string]func(*account.VaultWithdb){
 }
 
 func main() {
-	vault := account.NewVault(files.NewJSONdb("data.json"))
+	vault := account.NewVault(files.NewJSONdb("data.json"), *encrypter.NewEncrypter())
 	err := godotenv.Load("../.env")
 	if err != nil {
 		output.PrintError("Не прочитался файл окружения: ")
 		output.PrintError(err.Error())
-	}
-	res := os.Getenv("VAR")
-	fmt.Println("env.: ", res)
-	for _, e := range os.Environ() {
-		pair := strings.SplitN(e, "=", 2)
-		fmt.Println(pair[0], " = ", pair[1])
 	}
 	// или
 	//vault := account.NewVault(cloude.NewCloudeDb("https://exampleCloudStorage.com"))

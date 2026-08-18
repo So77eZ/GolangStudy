@@ -1,6 +1,7 @@
 package account
 
 import (
+	"GolangCourse/password/encrypter"
 	"GolangCourse/password/output"
 	"encoding/json"
 	"strings"
@@ -16,7 +17,8 @@ type Vault struct {
 //VaultWithdb хранилище аккаунтов с привязкой к файлу data.json
 type VaultWithdb struct {
 	Vault
-	db Db
+	db  Db
+	enc encrypter.Encrypter
 }
 
 // Db интерфейс для работы с хранилищем данных (например, JSON-файл или облачное хранилище)
@@ -37,7 +39,7 @@ type ByteWriter interface {
 
 // NewVault создаёт Vault: пытается загрузить данные из data.json,
 // при ошибке чтения или декодирования возвращает пустое хранилище.
-func NewVault(db Db) *VaultWithdb {
+func NewVault(db Db, enc encrypter.Encrypter) *VaultWithdb {
 	// Чтение существующих значений файла data.json
 	file, err := db.Read()
 	if err != nil {
@@ -46,7 +48,8 @@ func NewVault(db Db) *VaultWithdb {
 				Accounts:  []Account{},
 				UpdatedAt: time.Now(),
 			},
-			db: db,
+			db:  db,
+			enc: enc,
 		}
 	}
 	// Декодирование содержимого файла в структуру Vault
@@ -60,12 +63,14 @@ func NewVault(db Db) *VaultWithdb {
 				Accounts:  []Account{},
 				UpdatedAt: time.Now(),
 			},
-			db: db,
+			db:  db,
+			enc: enc,
 		}
 	}
 	return &VaultWithdb{
 		Vault: vault,
 		db:    db,
+		enc:   enc,
 	}
 }
 
@@ -110,6 +115,7 @@ func (vault *VaultWithdb) DeleteAccountByURL(URL string) bool {
 func (vault *VaultWithdb) save() error {
 	vault.UpdatedAt = time.Now()
 	data, err := vault.Vault.ToBytes()
+	//vault.enc.Encrypt(data)
 	if err != nil {
 		output.PrintError(err.Error())
 		return err
