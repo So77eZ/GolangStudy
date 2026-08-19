@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 //Vault хранилище аккаунтов
@@ -37,40 +39,47 @@ type ByteWriter interface {
 	Write([]byte) error
 }
 
-// NewVault создаёт Vault: пытается загрузить данные из data.json,
+// NewVault создаёт Vault: пытается загрузить данные из data.vault,
 // при ошибке чтения или декодирования возвращает пустое хранилище.
 func NewVault(db Db, enc encrypter.Encrypter) *VaultWithdb {
-	// Чтение существующих значений файла data.json
+	// Чтение существующих значений файла хранилища
 	file, err := db.Read()
 	if err != nil {
-		return &VaultWithdb{
-			Vault: Vault{
-				Accounts:  []Account{},
-				UpdatedAt: time.Now(),
-			},
-			db:  db,
-			enc: enc,
-		}
+		return newEmptyVault(db, enc)
 	}
-	// Декодирование содержимого файла в структуру Vault
-	var vault Vault
-	err = json.Unmarshal(file, &vault)
+	// Расшифровка содержимого файла
+	data, err := enc.Decrypt(file)
 	if err != nil {
-		output.PrintError("Ошибка при декодировании data.json")
+		output.PrintError("Не удалось расшифровать хранилище: " + err.Error())
+		output.PrintError("Файл повреждён, зашифрован другим ключом или сохранён без шифрования.")
+		output.PrintError("ВНИМАНИЕ: работа продолжится с пустым хранилищем, первое же сохранение перезапишет файл.")
+		return newEmptyVault(db, enc)
+	}
+	// Декодирование расшифрованного содержимого в структуру Vault
+	var vault Vault
+	color.Cyan("Найдено %d аккаунтов", len(vault.Accounts))
+	if err := json.Unmarshal(data, &vault); err != nil {
+		output.PrintError("Ошибка при декодировании хранилища")
 		output.PrintError(err.Error())
-		return &VaultWithdb{
-			Vault: Vault{
-				Accounts:  []Account{},
-				UpdatedAt: time.Now(),
-			},
-			db:  db,
-			enc: enc,
-		}
+		output.PrintError("ВНИМАНИЕ: работа продолжится с пустым хранилищем, первое же сохранение перезапишет файл.")
+		return newEmptyVault(db, enc)
 	}
 	return &VaultWithdb{
 		Vault: vault,
 		db:    db,
 		enc:   enc,
+	}
+}
+
+// newEmptyVault возвращает пустое хранилище, привязанное к переданным db и enc.
+func newEmptyVault(db Db, enc encrypter.Encrypter) *VaultWithdb {
+	return &VaultWithdb{
+		Vault: Vault{
+			Accounts:  []Account{},
+			UpdatedAt: time.Now(),
+		},
+		db:  db,
+		enc: enc,
 	}
 }
 
@@ -120,7 +129,8 @@ func (vault *VaultWithdb) save() error {
 		output.PrintError(err.Error())
 		return err
 	}
-	return vault.db.Write(data)
+	encryptedData := vault.enc.Encrypt(data)
+	return vault.db.Write(encryptedData) //(data)
 }
 
 // ToBytes сериализует Vault в JSON-байты для последующей записи в файл.

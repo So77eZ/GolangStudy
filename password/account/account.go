@@ -14,7 +14,7 @@ import (
 
 var symbols = []rune("1abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+")
 
-//Account объявление структуры для хранения данных аккаунта
+// Account объявление структуры для хранения данных аккаунта
 type Account struct {
 	Login     string    `json:"login"`
 	Password  string    `json:"password"`
@@ -23,14 +23,14 @@ type Account struct {
 	UpdatedAt time.Time `json:"UpdatedAt"`
 }
 
-//InputAccountData Ввод данных аккаунта
+// InputAccountData Ввод данных аккаунта
 func (account *Account) InputAccountData() {
-	account.Login = utils.GetUserInput([]string{"Input login: "})
+	account.Login, _ = utils.GetUserInput([]string{"Input login: "})
 	account.generatePassword()
-	account.URL = utils.GetUserInput([]string{"Input url: "})
+	account.URL, _ = utils.GetUserInput([]string{"Input url: "})
 }
 
-//FormatAccount - собрать данные аккаунта в текстовое представление
+// FormatAccount - собрать данные аккаунта в текстовое представление
 func (account Account) FormatAccount() string {
 	return fmt.Sprintf("Login: %s\nPassword: %s\nURL: %s\nCreated at: %s\n",
 		account.Login,
@@ -39,7 +39,7 @@ func (account Account) FormatAccount() string {
 		account.CreatedAt)
 }
 
-//PrintAccount - вывести данные аккаунта в консоль с цветом
+// PrintAccount - вывести данные аккаунта в консоль с цветом
 func (account *Account) PrintAccount() {
 
 	color.Blue("Login: " + account.Login)
@@ -57,7 +57,7 @@ func (account *Account) generatePassword() {
 	account.Password = string(generatedPassword)
 }
 
-//NewAccount ф-ция создания аккаунта со временем указания создания и обновления
+// NewAccount ф-ция создания аккаунта со временем указания создания и обновления
 func NewAccount(login, password, urlString string) (*Account, error) {
 	if login == "" {
 		return nil, errors.New("INVALID_LOGIN")

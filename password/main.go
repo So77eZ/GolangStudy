@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"strings"
 
@@ -16,7 +17,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var menu = map[string]func(*account.VaultWithdb){
+// menuAction выполняет пункт меню и возвращает false, если нужно выйти из меню.
+type menuAction func(*account.VaultWithdb) bool
+
+var menu = map[string]menuAction{
 	"1": createAccount,
 	"2": findAccountByURL,
 	"3": findAccountByLogin,
@@ -24,19 +28,32 @@ var menu = map[string]func(*account.VaultWithdb){
 	"5": exitFromMenu,
 }
 
-func main() {
-	vault := account.NewVault(files.NewJSONdb("data.json"), *encrypter.NewEncrypter())
-	err := godotenv.Load("../.env")
-	if err != nil {
-		output.PrintError("Не прочитался файл окружения: ")
-		output.PrintError(err.Error())
+// loadEnv подхватывает .env, если он лежит в текущей директории или на уровень выше.
+// Отсутствие файла не фатально: KEY может быть задан прямо в переменных окружения.
+func loadEnv() {
+	for _, path := range []string{".env", "../.env"} {
+		if err := godotenv.Load(path); err == nil {
+			return
+		}
 	}
+	output.PrintError("Файл .env не найден, KEY ожидается в переменных окружения")
+}
+
+func main() {
+	vaultPath := flag.String("vault", "data.vault", "путь к файлу хранилища паролей")
+	flag.Parse()
+
+	loadEnv()
+	// NewEncrypter паникует при отсутствии KEY — до того, как будет затронуто хранилище
+	enc := encrypter.NewEncrypter()
+
+	vault := account.NewVault(files.NewJSONdb(*vaultPath), *enc)
 	// или
 	//vault := account.NewVault(cloude.NewCloudeDb("https://exampleCloudStorage.com"))
 	fmt.Println("Вход в личный кабинет")
 Menu:
 	for {
-		variant := utils.GetUserInput(
+		variant, ok := utils.GetUserInput(
 			" ",
 			"1. Создать аккаунт",
 			"2. Найти аккаунт по URL",
@@ -46,12 +63,19 @@ Menu:
 			" ",
 			"Выбранный вариант",
 		)
-		menuFunc := menu[variant]
-		if menuFunc == nil {
-			output.PrintError("Пожалуйста, введите корректное число для выбора пункта меню.")
+		// ввод закончился (EOF) — дальше спрашивать нечего
+		if !ok {
 			break Menu
 		}
-		menuFunc(vault)
+		action := menu[variant]
+		if action == nil {
+			output.PrintError("Пожалуйста, введите корректное число для выбора пункта меню.")
+			continue
+		}
+		// пункт меню вернул false — выходим из цикла
+		if !action(vault) {
+			break Menu
+		}
 
 		// _, err := fmt.Scanln(&variant)
 		// if err != nil {
@@ -75,14 +99,18 @@ Menu:
 }
 
 // findAccountByURL ф-ция нахождения аккаунта по URl
-func findAccountByURL(vault *account.VaultWithdb) {
+func findAccountByURL(vault *account.VaultWithdb) bool {
 	fmt.Println("\nНахождение аккаунта по URL")
-	userURLInput := utils.GetUserInput("Введите URL-ссылку на аккаунт")
+	userURLInput, ok := utils.GetUserInput("Введите URL-ссылку на аккаунт")
+	if !ok {
+		return false
+	}
 	// анонимная ф-ция нахождения аккаунта по переданному URL
 	foundedAccounts := vault.FindAccounts(userURLInput, func(acc account.Account, str string) bool {
 		return strings.Contains(acc.URL, str)
 	})
 	outputResults(&foundedAccounts)
+	return true
 }
 
 func outputResults(accounts *[]account.Account) {
@@ -96,14 +124,18 @@ func outputResults(accounts *[]account.Account) {
 }
 
 // findAccountByLogin ф-ция нахождения аккаунта по URl
-func findAccountByLogin(vault *account.VaultWithdb) {
+func findAccountByLogin(vault *account.VaultWithdb) bool {
 	fmt.Println("\nНахождение аккаунта по логину")
-	userLoginInput := utils.GetUserInput("Введите Login аккаунта")
+	userLoginInput, ok := utils.GetUserInput("Введите Login аккаунта")
+	if !ok {
+		return false
+	}
 	// анонимная ф-ция нахождения аккаунта по переданному URL
 	foundedAccounts := vault.FindAccounts(userLoginInput, func(acc account.Account, str string) bool {
 		return strings.Contains(acc.Login, str)
 	})
 	outputResults(&foundedAccounts)
+	return true
 }
 
 // checkLogin ф-ция нахождения аккаунта по переданному логину
@@ -111,30 +143,46 @@ func checkLogin(acc account.Account, str string) bool {
 	return strings.Contains(acc.Login, str)
 }
 
-func deleteAccount(vault *account.VaultWithdb) {
+func deleteAccount(vault *account.VaultWithdb) bool {
 	fmt.Println("\nУдаление аккаунта")
-	userURLInput := utils.GetUserInput("Введите URL-ссылку на аккаунт")
+	userURLInput, ok := utils.GetUserInput("Введите URL-ссылку на аккаунт")
+	if !ok {
+		return false
+	}
 	if vault.DeleteAccountByURL(userURLInput) {
 		color.Green("Аккаунт по URL: " + userURLInput + " Успешно удален")
 	} else {
 		output.PrintError("Аккаунт по URL: " + userURLInput + " не был найден")
 	}
+	return true
 }
 
-func createAccount(vault *account.VaultWithdb) {
-	Login := utils.GetUserInput("Введите логин: ")
-	Password := utils.GetUserInput("Введите пароль: ")
-	URL := utils.GetUserInput("Введите URL: ")
+func createAccount(vault *account.VaultWithdb) bool {
+	Login, ok := utils.GetUserInput("Введите логин: ")
+	if !ok {
+		return false
+	}
+	Password, ok := utils.GetUserInput("Введите пароль: ")
+	if !ok {
+		return false
+	}
+	URL, ok := utils.GetUserInput("Введите URL: ")
+	if !ok {
+		return false
+	}
 	myAccount, err := account.NewAccount(Login, Password, URL)
 	if err != nil {
 		output.PrintError("Неверный формат URL или Логин")
-		return
+		return true
 	}
 	vault.AddAccount(*myAccount)
 
 	fmt.Println("\nАккаунт успешно создан")
+	return true
 }
 
-func exitFromMenu(vault *account.VaultWithdb) {
+// exitFromMenu сообщает циклу меню, что работу нужно завершить.
+func exitFromMenu(vault *account.VaultWithdb) bool {
 	color.HiGreen("Выход из меню")
+	return false
 }
