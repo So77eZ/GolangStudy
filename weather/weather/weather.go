@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+// Свой клиент, а не http.Get: у http.DefaultClient таймаут нулевой,
+// то есть ожидание ответа ничем не ограничено.
 var client = &http.Client{Timeout: 10 * time.Second}
 
 const baseURL = "http://wttr.in/"
@@ -24,6 +26,8 @@ func GetWeather(location geo.GeoData, format int) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("weather: разбор базового url: %w", err)
 	}
+	// JoinPath экранирует содержимое сегмента. При конкатенации '?' и '#'
+	// из названия города меняли бы структуру URL, а не попадали в путь.
 	u := base.JoinPath(location.City)
 	params := url.Values{}
 	params.Add("format", strconv.Itoa(format))
