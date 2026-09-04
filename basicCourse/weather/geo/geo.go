@@ -39,7 +39,7 @@ func GetMyLocation(city string) (GeoData, error) {
 				City: city,
 			}, nil
 		}
-		panic("Передаваемый город не найден")
+		return GeoData{}, errors.New("SUCH_CITY_DOESNT_EXIST")
 	}
 
 	res, err := client.Get(apiURL)
@@ -88,12 +88,12 @@ func checkCity(city string) bool {
 
 	body, err := io.ReadAll(io.LimitReader(res.Body, 1<<20)) // потолок 1 МБ
 	if err != nil {
-		fmt.Errorf("geo: чтение тела: %w", err)
+		fmt.Printf("geo: чтение тела: %v", err)
 		return false
 	}
 
 	if res.StatusCode != http.StatusOK {
-		fmt.Errorf("geo: статус %d: %s",
+		fmt.Printf("geo: статус %d: %s",
 			res.StatusCode, bytes.TrimSpace(body[:min(len(body), 512)]))
 		return false
 	}
