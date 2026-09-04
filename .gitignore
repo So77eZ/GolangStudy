@@ -1,4 +1,4 @@
-GolangStudy.exe
+*.exe
 data.json
 **/.env
 
