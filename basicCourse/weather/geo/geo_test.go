@@ -1,7 +1,7 @@
 package geo_test
 
 import (
-	"GolangCourse/weather/geo"
+	"GolangCourse/basicCourse/weather/geo"
 	"testing"
 )
 

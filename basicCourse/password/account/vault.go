@@ -1,8 +1,8 @@
 package account
 
 import (
-	"GolangCourse/password/encrypter"
-	"GolangCourse/password/output"
+	"GolangCourse/basicCourse/password/encrypter"
+	"GolangCourse/basicCourse/password/output"
 	"encoding/json"
 	"strings"
 	"time"

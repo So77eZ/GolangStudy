@@ -1,8 +1,8 @@
 package main
 
 import (
-	"GolangCourse/weather/geo"
-	"GolangCourse/weather/weather"
+	"GolangCourse/basicCourse/weather/geo"
+	"GolangCourse/basicCourse/weather/weather"
 	"flag"
 	"fmt"
 	"os"

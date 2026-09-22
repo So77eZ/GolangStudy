@@ -1,7 +1,7 @@
 package weather
 
 import (
-	"GolangCourse/weather/geo"
+	"GolangCourse/basicCourse/weather/geo"
 	"bytes"
 	"fmt"
 	"io"

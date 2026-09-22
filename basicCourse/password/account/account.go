@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"GolangCourse/password/utils"
+	"GolangCourse/basicCourse/password/utils"
 
 	"github.com/fatih/color"
 )

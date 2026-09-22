@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"GolangCourse/password/account"
-	"GolangCourse/password/encrypter"
-	"GolangCourse/password/output"
+	"GolangCourse/basicCourse/password/account"
+	"GolangCourse/basicCourse/password/encrypter"
+	"GolangCourse/basicCourse/password/output"
 
-	//"GolangCourse/password/cloude"
-	"GolangCourse/password/files"
-	"GolangCourse/password/utils"
+	//"GolangCourse/basicCourse/password/cloude"
+	"GolangCourse/basicCourse/password/files"
+	"GolangCourse/basicCourse/password/utils"
 
 	"github.com/fatih/color"
 	"github.com/joho/godotenv"

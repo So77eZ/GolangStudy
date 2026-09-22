@@ -1,7 +1,7 @@
 package files
 
 import (
-	"GolangCourse/password/output"
+	"GolangCourse/basicCourse/password/output"
 	"os"
 
 	"github.com/fatih/color"
