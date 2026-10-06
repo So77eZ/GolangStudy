@@ -1,17 +1,19 @@
 package main
 
 import (
-	"GolangCourse/advancedCourse/simpleHTTPserver/configs"
-	"GolangCourse/advancedCourse/simpleHTTPserver/internal/handler"
+	"GolangCourse/advancedCourse/simpleHTTPserver/internal/auth"
 	"fmt"
 	"net/http"
 )
 
 func main() {
 
-	conf := configs.LoadConfig()
+	//conf := configs.LoadConfig()
 	router := http.NewServeMux()
-	handler.NewHelloHandler(router)
+	auth.NewAuthHandler(router)
+
+	// /auth/login
+	// /auth/register
 
 	server := http.Server{
 		Addr:    ":8081",
