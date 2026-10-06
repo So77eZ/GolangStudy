@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"fmt"
@@ -12,8 +12,8 @@ import (
 // HelloHandler структура, которая будет обрабатывать запросы на /hello
 type HelloHandler struct{}
 
-// NewHellowHandler создает новый обработчик для маршрута /hello и регистрирует его в переданном роутере
-func NewHellowHandler(router *http.ServeMux) {
+// NewHelloHandler создает новый обработчик для маршрута /hello и регистрирует его в переданном роутере
+func NewHelloHandler(router *http.ServeMux) {
 	handler := &HelloHandler{}
 	router.HandleFunc("/hello", handler.Hello())
 }
