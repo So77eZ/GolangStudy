@@ -1,6 +1,7 @@
 package main
 
 import (
+	"GolangCourse/advancedCourse/simpleHTTPserver/configs"
 	"GolangCourse/advancedCourse/simpleHTTPserver/internal/auth"
 	"fmt"
 	"net/http"
@@ -8,9 +9,9 @@ import (
 
 func main() {
 
-	//conf := configs.LoadConfig()
+	conf := configs.LoadConfig()
 	router := http.NewServeMux()
-	auth.NewAuthHandler(router)
+	auth.NewAuthHandler(router, auth.AuthHandlerDeps{Config: conf})
 
 	// /auth/login
 	// /auth/register
