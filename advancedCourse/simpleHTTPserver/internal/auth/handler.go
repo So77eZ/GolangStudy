@@ -3,11 +3,9 @@ package auth
 import (
 	"GolangCourse/advancedCourse/simpleHTTPserver/configs"
 	res "GolangCourse/advancedCourse/simpleHTTPserver/pkg"
-	"encoding/json"
+	req "GolangCourse/advancedCourse/simpleHTTPserver/pkg/req"
 	"fmt"
 	"net/http"
-
-	"github.com/go-playground/validator/v10"
 )
 
 // AuthHandlerDeps структура, которая содержит зависимости для AuthHandler
@@ -26,25 +24,17 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	router.HandleFunc("POST /auth/register", handler.Register())
 }
 
-var validate = validator.New()
-
 func (handler *AuthHandler) Login() http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-
-		//Прочитать структуру входящего body
-		var payload LoginRequest
-		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
-			res.JSONRes(w, "Invalid request body", http.StatusBadRequest)
+	return func(w http.ResponseWriter, request *http.Request) {
+		//обработка body структуры LoginRequest
+		_, err := req.HandleBody[LoginRequest](&w, request)
+		if err != nil {
 			return
 		}
-
-		if validate.Struct(payload) != nil {
-			res.JSONRes(w, "Validation error", http.StatusBadRequest)
-			return
-		}
-
+		//выдача ответа
 		data := LoginResponse{
-			Token: "123"}
+			Token: "123",
+		}
 		if err := res.JSONRes(w, data, http.StatusOK); err != nil {
 			fmt.Println("Encode error: ", err)
 			return
@@ -53,16 +43,20 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 }
 
 func (handler *AuthHandler) Register() http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("endpoint /auth/register requested")
+	return func(w http.ResponseWriter, request *http.Request) {
+		//обработка body структуры RegisterRequest
+		_, err := req.HandleBody[RegisterRequest](&w, request)
+		if err != nil {
+			return
+		}
+		//выдача ответа
 		data := RegisterResponse{
-			Token: "333",
-			Email: "ja227@mail.com",
-			ID:    12399191,
-			Name:  "Slava",
+			Token: "321",
+			ID:    100,
 		}
 		if err := res.JSONRes(w, data, http.StatusCreated); err != nil {
 			fmt.Println("encode error: ", err)
+			return
 		}
 	}
 }
