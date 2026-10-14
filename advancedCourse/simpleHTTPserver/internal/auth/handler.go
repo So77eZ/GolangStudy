@@ -6,7 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // AuthHandlerDeps структура, которая содержит зависимости для AuthHandler
@@ -25,42 +26,28 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	router.HandleFunc("POST /auth/register", handler.Register())
 }
 
-// mailAdress, err := mail.ParseAddress(payload.Email)//alt variant
-var emailRe = regexp.MustCompile(`^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$`)
+var validate = validator.New()
 
 func (handler *AuthHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		//Прочитать структуру входящего body
 		var payload LoginRequest
-		err := json.NewDecoder(req.Body).Decode(&payload)
-		if err != nil {
+		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
 			res.JSONRes(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
-		if payload.Email == "" {
-			fmt.Println("Введите логин")
-			res.JSONRes(w, "Email is required", http.StatusBadRequest)
-			return
-		}
-
-		if !emailRe.MatchString(payload.Email) {
-			fmt.Println("Логин введен неправильном формате")
-			res.JSONRes(w, "Wrong email format", http.StatusBadRequest)
-			return
-		}
-
-		if payload.Password == "" {
-			fmt.Println("Введите пароль")
-			res.JSONRes(w, "Password is required", http.StatusBadRequest)
+		if validate.Struct(payload) != nil {
+			res.JSONRes(w, "Validation error", http.StatusBadRequest)
 			return
 		}
 
 		data := LoginResponse{
 			Token: "123"}
 		if err := res.JSONRes(w, data, http.StatusOK); err != nil {
-			fmt.Println("encode error: ", err)
+			fmt.Println("Encode error: ", err)
+			return
 		}
 	}
 }
