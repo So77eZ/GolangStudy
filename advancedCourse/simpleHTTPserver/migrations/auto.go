@@ -18,5 +18,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&link.Link{})
+	if err := db.AutoMigrate(&link.Link{}); err != nil {
+		panic(err)
+	}
 }
