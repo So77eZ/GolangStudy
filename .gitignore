@@ -1,6 +1,9 @@
 *.exe
 data.json
 **/.env
+./env
 
 *.vault
 *.vault.*.bak
+
+/postgres-data
