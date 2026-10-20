@@ -1,20 +1,26 @@
 package link
 
 import (
+	res "GolangCourse/advancedCourse/simpleHTTPserver/pkg"
+	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/req"
 	"fmt"
 	"net/http"
 )
 
 // LinkHandlerDeps структура, которая содержит зависимости для LinkHandler
 type LinkHandlerDeps struct {
+	LinkRepository *LinkRepository
 }
 
 // LinkHandler структура, которая будет обрабатывать запросы на /link CRUD
 type LinkHandler struct {
+	LinkRepository *LinkRepository
 }
 
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
-	handler := &LinkHandler{}
+	handler := &LinkHandler{
+		LinkRepository: deps.LinkRepository,
+	}
 	router.HandleFunc("POST /link", handler.Create())
 	router.HandleFunc("PATCH /link/{id}", handler.Update())
 	router.HandleFunc("DELETE /link/{id}", handler.Delete())
@@ -22,8 +28,30 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 }
 
 func (handler *LinkHandler) Create() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("u'r in CREATE link page")
+	return func(w http.ResponseWriter, request *http.Request) {
+
+		//обработка body структуры LinkCreateRequest
+		body, err := req.HandleBody[LinkCreateRequest](&w, request)
+		if err != nil {
+			return
+		}
+
+		link := NewLink(body.URL)
+
+		createdLink, err := handler.LinkRepository.Create(link)
+		if err != nil {
+			res.JSONRes(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// if(request.Body.Read())
+
+		//выдача ответа
+		if err := res.JSONRes(w, createdLink, http.StatusCreated); err != nil {
+			fmt.Println("Encode error: ", err)
+			return
+		}
+
 	}
 }
 func (handler *LinkHandler) GoTo() http.HandlerFunc {
@@ -38,6 +66,7 @@ func (handler *LinkHandler) Update() http.HandlerFunc {
 }
 func (handler *LinkHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("u'r in DELETE link page")
+		id := r.PathValue("id")
+		fmt.Println(id)
 	}
 }
