@@ -30,33 +30,46 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 func (handler *LinkHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {
 
-		//обработка body структуры LinkCreateRequest
+		// Обработка body структуры LinkCreateRequest
 		body, err := req.HandleBody[LinkCreateRequest](&w, request)
 		if err != nil {
 			return
 		}
 
+		// Создание хэша и проверка его на уникальность
 		link := NewLink(body.URL)
+		for {
 
+			if foundLink, _ := handler.LinkRepository.GetByHash(link.Hash); foundLink == nil {
+				break
+			}
+			link.GenerateHash()
+		}
+		// Запись в базу данных новой ссылки
 		createdLink, err := handler.LinkRepository.Create(link)
 		if err != nil {
 			res.JSONRes(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// if(request.Body.Read())
-
-		//выдача ответа
+		// Выдача ответа
 		if err := res.JSONRes(w, createdLink, http.StatusCreated); err != nil {
 			fmt.Println("Encode error: ", err)
 			return
 		}
-
 	}
 }
 func (handler *LinkHandler) GoTo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("u'r in READ link page")
+		hashURl := r.PathValue("hash")
+		link, err := handler.LinkRepository.GetByHash(hashURl)
+		if err != nil {
+			res.JSONRes(w, err.Error(), http.StatusNotFound)
+			return
+		}
+
+		http.Redirect(w, r, link.URL, http.StatusTemporaryRedirect)
+
 	}
 }
 func (handler *LinkHandler) Update() http.HandlerFunc {
