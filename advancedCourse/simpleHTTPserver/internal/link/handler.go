@@ -5,6 +5,9 @@ import (
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/req"
 	"fmt"
 	"net/http"
+	"strconv"
+
+	"gorm.io/gorm"
 )
 
 // LinkHandlerDeps структура, которая содержит зависимости для LinkHandler
@@ -38,12 +41,18 @@ func (handler *LinkHandler) Create() http.HandlerFunc {
 
 		// Создание хэша и проверка его на уникальность
 		link := NewLink(body.URL)
+		var triesCounter = 0
 		for {
 
 			if foundLink, _ := handler.LinkRepository.GetByHash(link.Hash); foundLink == nil {
 				break
 			}
 			link.GenerateHash()
+			triesCounter++
+			if triesCounter >= 10 {
+				res.JSONRes(w, "Could not generate unique hash", http.StatusInternalServerError)
+				return
+			}
 		}
 		// Запись в базу данных новой ссылки
 		createdLink, err := handler.LinkRepository.Create(link)
@@ -54,7 +63,7 @@ func (handler *LinkHandler) Create() http.HandlerFunc {
 
 		// Выдача ответа
 		if err := res.JSONRes(w, createdLink, http.StatusCreated); err != nil {
-			fmt.Println("Encode error: ", err)
+			res.JSONRes(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -74,12 +83,65 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 }
 func (handler *LinkHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("u'r in UPDATE link page")
+		// Обработка body структуры LinkUpdateRequest
+		body, err := req.HandleBody[LinkUpdateRequest](&w, r)
+		if err != nil {
+			return
+		}
+		// Собираем пришедший id записи и конвертируем его в формат gorm модели
+		idString := r.PathValue("id")
+		id, err := strconv.ParseUint(idString, 10, 64)
+		if err != nil {
+			res.JSONRes(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		// Проверка существования записи
+		_, err = handler.LinkRepository.GetByID(uint(id))
+		if err != nil {
+			res.JSONRes(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		// Само обновление записи в БД полученными параметрами
+		link, err := handler.LinkRepository.Update(&Link{
+			Model: gorm.Model{ID: uint(id)},
+			URL:   body.URL,
+			Hash:  body.Hash,
+		})
+		if err != nil {
+			res.JSONRes(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		// Выдача ответа
+		if err := res.JSONRes(w, link, http.StatusOK); err != nil {
+			fmt.Println("Encode error: ", err)
+			return
+		}
+
 	}
 }
 func (handler *LinkHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
-		fmt.Println(id)
+		// Собираем пришедший id записи и конвертируем его в формат gorm модели
+		idString := r.PathValue("id")
+		id, err := strconv.ParseUint(idString, 10, 64)
+		if err != nil {
+			res.JSONRes(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		// Проверка существования записи
+		_, err = handler.LinkRepository.GetByID(uint(id))
+		if err != nil {
+			res.JSONRes(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		// Само удаление записи в БД по переданной ссылке
+		if err = handler.LinkRepository.Delete(uint(id)); err != nil {
+			res.JSONRes(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Выдача ответа
+		if err := res.JSONRes(w, nil, http.StatusNoContent); err != nil {
+			return
+		}
 	}
 }

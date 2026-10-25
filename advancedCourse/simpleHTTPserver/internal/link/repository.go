@@ -2,6 +2,9 @@ package link
 
 import (
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/db"
+	"errors"
+
+	"gorm.io/gorm/clause"
 )
 
 type LinkRepository struct {
@@ -15,7 +18,7 @@ func NewLinkRepository(database *db.Db) *LinkRepository {
 }
 
 func (repo *LinkRepository) Create(link *Link) (*Link, error) {
-	result := repo.Database.DB.Create(link)
+	result := repo.Database.Create(link)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -24,11 +27,39 @@ func (repo *LinkRepository) Create(link *Link) (*Link, error) {
 
 func (repo *LinkRepository) GetByHash(hash string) (*Link, error) {
 	var link Link
-	result := repo.Database.DB.First(&link, "hash = ?", hash)
+	result := repo.Database.First(&link, "hash = ?", hash)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return &link, nil
 }
 
+func (repo *LinkRepository) Update(link *Link) (*Link, error) {
+	// Проверка длинны обновляемого хэша
+	if len(link.Hash) != 8 && link.Hash != "" {
+		return nil, errors.New("hash must be 8 characters")
+	}
+	// Обновление
+	result := repo.Database.Clauses(clause.Returning{}).Updates(link)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return link, nil
+}
 
+func (repo *LinkRepository) Delete(id uint) error {
+	result := repo.Database.Delete(&Link{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (repo *LinkRepository) GetByID(id uint) (*Link, error) {
+	var link Link
+	result := repo.Database.First(&link, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &link, nil
+}
