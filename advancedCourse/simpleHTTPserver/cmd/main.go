@@ -5,6 +5,7 @@ import (
 	"GolangCourse/advancedCourse/simpleHTTPserver/internal/auth"
 	"GolangCourse/advancedCourse/simpleHTTPserver/internal/link"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/db"
+	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/middleware"
 	"fmt"
 	"net/http"
 )
@@ -24,7 +25,7 @@ func main() {
 
 	server := http.Server{
 		Addr:    ":8081",
-		Handler: router,
+		Handler: middleware.Logging(router),
 	}
 
 	fmt.Println("server is listening on port: 8081")
