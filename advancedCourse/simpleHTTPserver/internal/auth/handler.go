@@ -11,15 +11,21 @@ import (
 // AuthHandlerDeps структура, которая содержит зависимости для AuthHandler
 type AuthHandlerDeps struct {
 	*configs.Config
+	*AuthService
 }
 
 // AuthHandler структура, которая будет обрабатывать запросы на /auth
 type AuthHandler struct {
 	*configs.Config
+	*AuthService
 }
 
 func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
-	handler := &AuthHandler{Config: deps.Config}
+	handler := &AuthHandler{
+		Config:      deps.Config,
+		AuthService: deps.AuthService,
+	}
+
 	router.HandleFunc("POST /auth/login", handler.Login())
 	router.HandleFunc("POST /auth/register", handler.Register())
 }
@@ -45,17 +51,13 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 func (handler *AuthHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {
 		//обработка body структуры RegisterRequest
-		_, err := req.HandleBody[RegisterRequest](&w, request)
+		body, err := req.HandleBody[RegisterRequest](&w, request)
 		if err != nil {
 			return
 		}
-		//выдача ответа
-		data := RegisterResponse{
-			Token: "321",
-			ID:    100,
-		}
-		if err := res.JSONRes(w, data, http.StatusCreated); err != nil {
-			fmt.Println("encode error: ", err)
+
+		if _, err = handler.AuthService.Register(body.Email, body.Password, body.Name); err != nil {
+			fmt.Println("register error: ", err)
 			return
 		}
 	}

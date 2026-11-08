@@ -2,6 +2,7 @@ package main
 
 import (
 	"GolangCourse/advancedCourse/simpleHTTPserver/internal/link"
+	"GolangCourse/advancedCourse/simpleHTTPserver/internal/user"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -18,7 +19,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if err := db.AutoMigrate(&link.Link{}); err != nil {
+	if err := db.AutoMigrate(&link.Link{}, &user.User{}); err != nil {
 		panic(err)
 	}
 }

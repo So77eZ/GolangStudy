@@ -69,6 +69,7 @@ func (handler *LinkHandler) Create() http.HandlerFunc {
 		}
 	}
 }
+
 func (handler *LinkHandler) GoTo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		hashURl := r.PathValue("hash")
@@ -82,6 +83,7 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 
 	}
 }
+
 func (handler *LinkHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Обработка body структуры LinkUpdateRequest
@@ -120,6 +122,7 @@ func (handler *LinkHandler) Update() http.HandlerFunc {
 
 	}
 }
+
 func (handler *LinkHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Собираем пришедший id записи и конвертируем его в формат gorm модели

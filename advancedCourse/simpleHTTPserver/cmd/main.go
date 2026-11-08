@@ -4,6 +4,7 @@ import (
 	"GolangCourse/advancedCourse/simpleHTTPserver/configs"
 	"GolangCourse/advancedCourse/simpleHTTPserver/internal/auth"
 	"GolangCourse/advancedCourse/simpleHTTPserver/internal/link"
+	"GolangCourse/advancedCourse/simpleHTTPserver/internal/user"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/db"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/middleware"
 	"fmt"
@@ -18,10 +19,17 @@ func main() {
 
 	//Repositories
 	linkRepository := link.NewLinkRepository(db)
+	userRepository := user.NewUserRepository(db)
+
+	//Services
+	authService := auth.NewAuthService(userRepository)
 
 	//Handler
-	auth.NewAuthHandler(router, auth.AuthHandlerDeps{Config: conf})
+	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
+		Config:      conf,
+		AuthService: authService})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{LinkRepository: linkRepository})
+	user.NewUserHandler(router, user.UserHandlerDeps{UserRepository: userRepository})
 
 	//Middlewares
 	stack := middleware.Chain(
