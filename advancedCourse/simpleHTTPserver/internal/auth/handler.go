@@ -2,7 +2,6 @@ package auth
 
 import (
 	"GolangCourse/advancedCourse/simpleHTTPserver/configs"
-	res "GolangCourse/advancedCourse/simpleHTTPserver/pkg"
 	req "GolangCourse/advancedCourse/simpleHTTPserver/pkg/req"
 	"fmt"
 	"net/http"
@@ -33,18 +32,17 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 func (handler *AuthHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {
 		//обработка body структуры LoginRequest
-		_, err := req.HandleBody[LoginRequest](&w, request)
+		body, err := req.HandleBody[LoginRequest](&w, request)
 		if err != nil {
 			return
 		}
-		//выдача ответа
-		data := LoginResponse{
-			Token: "123",
-		}
-		if err := res.JSONRes(w, data, http.StatusOK); err != nil {
-			fmt.Println("Encode error: ", err)
+
+		email, err := handler.AuthService.Login(body.Email, body.Password, body.Name)
+		if err != nil {
+			fmt.Println("login error: ", err)
 			return
 		}
+		fmt.Println("founded email:", email)
 	}
 }
 

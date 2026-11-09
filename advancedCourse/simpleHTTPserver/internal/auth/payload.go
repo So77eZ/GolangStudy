@@ -1,7 +1,9 @@
 package auth
 
+// LoginRequest структура запроса логина
 type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
+	Email    string `json:"email" validate:"required_without=Name,omitempty,email"`
+	Name     string `json:"name" validate:"required_without=Email"`
 	Password string `json:"password" validate:"required"`
 }
 type LoginResponse struct {
