@@ -19,6 +19,7 @@ type DBConfig struct {
 	Dsn string
 }
 
+// LoadConfig загружает .env и читает настройки БД и подписи JWT из окружения.
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
@@ -29,7 +30,7 @@ func LoadConfig() *Config {
 			Dsn: os.Getenv("DSN"),
 		},
 		Auth: AuthConfig{
-			Secret: os.Getenv("TOKEN"),
+			Secret: os.Getenv("SECRET"),
 		},
 	}
 }

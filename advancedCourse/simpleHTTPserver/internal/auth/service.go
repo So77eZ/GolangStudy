@@ -27,7 +27,7 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 		return "", errors.New("запись не найдена")
 	}
 	if existedUser != nil {
-		return "", errors.New(ErrUserNameExists)
+		return "", ErrUserNameExists
 	}
 
 	// Проверяем, что email ещё не занят другим пользователем.
@@ -36,7 +36,7 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 		return "", errors.New("запись не найдена")
 	}
 	if existedUser != nil {
-		return "", errors.New(ErrUserEmailExists)
+		return "", ErrUserEmailExists
 	}
 
 	// Хешируем пароль с автоматически созданной солью перед сохранением в БД.
@@ -54,7 +54,7 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 
 	// Сохраняем пользователя; при ошибке не сообщаем об успешной регистрации.
 	if _, err = service.UserRepository.Create(user); err != nil {
-		return "", errors.New(ErrRegistrationErr)
+		return "", ErrRegistrationErr
 	}
 	return user.Email, nil
 }
@@ -63,7 +63,7 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 func (service *AuthService) Login(email, password, name string) (string, error) {
 	// Для входа нужны пароль и хотя бы один идентификатор: email или никнейм.
 	if (email == "" && name == "") || password == "" {
-		return "", errors.New(ErrNotEnougthData)
+		return "", ErrNotEnougthData
 	}
 
 	var existedUser *user.User
@@ -78,19 +78,19 @@ func (service *AuthService) Login(email, password, name string) (string, error) 
 	// Отсутствие пользователя скрываем за общей ошибкой входа, ошибки БД сохраняем.
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", errors.New(ErrWrongCredetials)
+			return "", ErrWrongCredetials
 		}
 		return "", err
 	}
 
 	// Защищаемся от обращения к полям nil, даже если репозиторий не вернул ошибку.
 	if existedUser == nil {
-		return "", errors.New(ErrWrongCredetials)
+		return "", ErrWrongCredetials
 	}
 
 	// Сравниваем хеш из БД с исходным паролем; причина отказа остаётся общей.
 	if err = bcrypt.CompareHashAndPassword([]byte(existedUser.Password), []byte(password)); err != nil {
-		return "", errors.New(ErrWrongCredetials)
+		return "", ErrWrongCredetials
 	}
 
 	return existedUser.Email, nil

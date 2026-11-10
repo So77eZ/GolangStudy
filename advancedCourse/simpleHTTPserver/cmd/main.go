@@ -14,6 +14,10 @@ import (
 func main() {
 
 	conf := configs.LoadConfig()
+	if conf.Auth.Secret == "" || conf.Auth.Secret == " " {
+		panic("Не задан токен для конфига")
+	}
+
 	db := db.NewDb(conf)
 	router := http.NewServeMux()
 
