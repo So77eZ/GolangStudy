@@ -1,6 +1,7 @@
 package link
 
 import (
+	"GolangCourse/advancedCourse/simpleHTTPserver/configs"
 	res "GolangCourse/advancedCourse/simpleHTTPserver/pkg"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/middleware"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/req"
@@ -14,6 +15,7 @@ import (
 // LinkHandlerDeps структура, которая содержит зависимости для LinkHandler
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
+	Config         *configs.Config
 }
 
 // LinkHandler структура, которая будет обрабатывать запросы на /link CRUD
@@ -26,7 +28,7 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 		LinkRepository: deps.LinkRepository,
 	}
 	router.HandleFunc("POST /link", handler.Create())
-	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update()))
+	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
 	router.HandleFunc("DELETE /link/{id}", handler.Delete())
 	router.HandleFunc("GET /{hash}", handler.GoTo())
 }

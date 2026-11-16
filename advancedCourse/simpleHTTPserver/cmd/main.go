@@ -32,8 +32,13 @@ func main() {
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
 		Config:      conf,
 		AuthService: authService})
-	link.NewLinkHandler(router, link.LinkHandlerDeps{LinkRepository: linkRepository})
-	user.NewUserHandler(router, user.UserHandlerDeps{UserRepository: userRepository})
+
+	link.NewLinkHandler(router, link.LinkHandlerDeps{
+		LinkRepository: linkRepository,
+		Config:         conf})
+
+	user.NewUserHandler(router, user.UserHandlerDeps{
+		UserRepository: userRepository})
 
 	//Middlewares
 	stack := middleware.Chain(

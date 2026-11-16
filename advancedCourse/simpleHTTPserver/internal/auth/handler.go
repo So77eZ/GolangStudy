@@ -57,7 +57,7 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 		}
 
 		// Выпускаем токен только после успешной проверки данных входа.
-		token, err := jwt.NewJWT(handler.Auth.Secret).Create(email)
+		token, err := jwt.NewJWT(handler.Auth.Secret).Create(jwt.JWTData{Email: email})
 		if err != nil {
 			http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 			log.Println("internal login error:", err)
@@ -88,7 +88,7 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 		}
 
 		// Выпускаем токен только после успешного создания пользователя.
-		token, err := jwt.NewJWT(handler.Auth.Secret).Create(regUserEmail)
+		token, err := jwt.NewJWT(handler.Auth.Secret).Create(jwt.JWTData{Email: regUserEmail})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

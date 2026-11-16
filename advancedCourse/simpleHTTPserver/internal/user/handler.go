@@ -1,6 +1,7 @@
 package user
 
 import (
+	"GolangCourse/advancedCourse/simpleHTTPserver/configs"
 	res "GolangCourse/advancedCourse/simpleHTTPserver/pkg"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/middleware"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/req"
@@ -13,11 +14,13 @@ import (
 // UserHandlerDeps содержит зависимости HTTP-обработчика пользователей.
 type UserHandlerDeps struct {
 	UserRepository *UserRepository
+	Config         *configs.Config
 }
 
 // UserHandler обрабатывает HTTP-запросы к ресурсам пользователей.
 type UserHandler struct {
 	UserRepository *UserRepository
+	Config         *configs.Config
 }
 
 // NewUserHandler создаёт обработчик и регистрирует маршруты пользователей.
@@ -26,7 +29,7 @@ func NewUserHandler(router *http.ServeMux, deps UserHandlerDeps) {
 		UserRepository: deps.UserRepository,
 	}
 	router.HandleFunc("POST /user", handler.Create())
-	router.Handle("PATCH /user/{id}", middleware.IsAuthed(handler.Update()))
+	router.Handle("PATCH /user/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
 	router.HandleFunc("DELETE /user/{id}", handler.Delete())
 	router.HandleFunc("GET /user/{name}", handler.GoTo())
 }
@@ -79,14 +82,17 @@ func (handler *UserHandler) Create() http.HandlerFunc {
 
 	}
 }
+
 // Update возвращает обработчик обновления пользователя.
 func (handler *UserHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {}
 }
+
 // Delete возвращает обработчик удаления пользователя.
 func (handler *UserHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {}
 }
+
 // GoTo возвращает обработчик получения пользователя по имени.
 func (handler *UserHandler) GoTo() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {}

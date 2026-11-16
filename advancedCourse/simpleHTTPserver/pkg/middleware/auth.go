@@ -1,12 +1,14 @@
 package middleware
 
 import (
+	"GolangCourse/advancedCourse/simpleHTTPserver/configs"
+	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/jwt"
 	"fmt"
 	"net/http"
 	"strings"
 )
 
-func IsAuthed(next http.Handler) http.Handler {
+func IsAuthed(next http.Handler, config *configs.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bearer := r.Header.Get("Authorization")
 		if bearer == "" {
@@ -19,7 +21,9 @@ func IsAuthed(next http.Handler) http.Handler {
 		if token == "" {
 			return //fmt.Errorf("токен отсутствует после префикса")
 		}
-		fmt.Println(token)
+		isValid, data := jwt.NewJWT(config.Auth.Secret).Parse(token)
+		fmt.Println(data.Email)
+		fmt.Println(isValid)
 		next.ServeHTTP(w, r)
 	})
 }
