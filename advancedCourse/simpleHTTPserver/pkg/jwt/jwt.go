@@ -42,6 +42,9 @@ func (j *JWT) Parse(token string) (bool, *JWTData) {
 		return false, nil
 	}
 	email := t.Claims.(jwt.MapClaims)["email"]
+	if _, ok := email.(string); !ok || email == "" {
+		return false, nil
+	}
 	return t.Valid, &JWTData{
 		Email: email.(string),
 	}

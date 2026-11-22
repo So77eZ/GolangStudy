@@ -88,11 +88,20 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 
 func (handler *LinkHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Поулчение контекста
+		email, ok := r.Context().Value(middleware.ContextEmailKey).(string)
+		if !ok {
+			res.JSONRes(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		fmt.Println(email)
+
 		// Обработка body структуры LinkUpdateRequest
 		body, err := req.HandleBody[LinkUpdateRequest](&w, r)
 		if err != nil {
 			return
 		}
+
 		// Собираем пришедший id записи и конвертируем его в формат gorm модели
 		idString := r.PathValue("id")
 		id, err := strconv.ParseUint(idString, 10, 64)

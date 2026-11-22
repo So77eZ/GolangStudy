@@ -38,7 +38,8 @@ func main() {
 		Config:         conf})
 
 	user.NewUserHandler(router, user.UserHandlerDeps{
-		UserRepository: userRepository})
+		UserRepository: userRepository,
+		Config:         conf})
 
 	//Middlewares
 	stack := middleware.Chain(
