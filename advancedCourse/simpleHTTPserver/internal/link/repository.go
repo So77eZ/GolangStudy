@@ -63,3 +63,35 @@ func (repo *LinkRepository) GetByID(id uint) (*Link, error) {
 	}
 	return &link, nil
 }
+
+// Count подсчитывает активные ссылки с тем же фильтром, что и GetAll, без пагинации.
+func (repo *LinkRepository) Count() (int64, error) {
+	var count int64
+	err := repo.Database.
+		Table("links").
+		Where("deleted_at is null").
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// GetAll возвращает страницу активных ссылок в порядке возрастания ID.
+func (repo *LinkRepository) GetAll(limit, offset uint) ([]Link, error) {
+	// Инициализируем пустой срез, чтобы пустая страница кодировалась как [].
+	links := make([]Link, 0)
+
+	// Scan выполняет запрос и записывает строки в links.
+	err := repo.Database.
+		Table("links").
+		Where("deleted_at is null").
+		Order("id asc").
+		Limit(int(limit)).
+		Offset(int(offset)).
+		Scan(&links).Error
+	if err != nil {
+		return nil, err
+	}
+	return links, nil
+}

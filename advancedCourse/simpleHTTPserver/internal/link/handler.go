@@ -6,6 +6,7 @@ import (
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/middleware"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/req"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -30,7 +31,10 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	router.HandleFunc("POST /link", handler.Create())
 	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
 	router.HandleFunc("DELETE /link/{id}", handler.Delete())
+
 	router.HandleFunc("GET /{hash}", handler.GoTo())
+	// Для просмотра списка ссылок требуется JWT.
+	router.Handle("GET /link", middleware.IsAuthed(handler.GetAll(), deps.Config))
 }
 
 func (handler *LinkHandler) Create() http.HandlerFunc {
@@ -83,6 +87,54 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 
 		http.Redirect(w, r, link.URL, http.StatusTemporaryRedirect)
 
+	}
+}
+
+// GetAll возвращает обработчик GET /link с пагинацией.
+func (handler *LinkHandler) GetAll() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Читаем параметры страницы из URL и преобразуем их в int.
+		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+		if err != nil {
+			res.JSONRes(w, "Invalid limit", http.StatusBadRequest)
+			return
+		}
+		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+		if err != nil {
+			res.JSONRes(w, "Invalid offset", http.StatusBadRequest)
+			return
+		}
+		// Atoi принимает отрицательные числа, поэтому знак проверяем отдельно.
+		if limit < 0 || offset < 0 {
+			res.JSONRes(w, "Invalid limit or offset", http.StatusBadRequest)
+			return
+		}
+
+		// Репозиторий применяет limit и offset к запросу и возвращает страницу ссылок.
+		AllLinks, err := handler.LinkRepository.GetAll(uint(limit), uint(offset))
+		if err != nil {
+			log.Printf("get links: %v", err)
+			res.JSONRes(w, "Failed to get links", http.StatusInternalServerError)
+			return
+		}
+
+		// Общее число активных ссылок позволяет клиенту вычислить число страниц.
+		count, err := handler.LinkRepository.Count()
+		if err != nil {
+			log.Printf("get count: %v", err)
+			res.JSONRes(w, "Failed to get links count", http.StatusInternalServerError)
+			return
+		}
+
+		// Отправляем страницу ссылок вместе с общим количеством.
+		if err := res.JSONRes(w, GetAllLinksResponse{
+			Links: AllLinks,
+			Count: count,
+		},
+			http.StatusOK); err != nil {
+			log.Printf("write links response: %v", err)
+			return
+		}
 	}
 }
 
