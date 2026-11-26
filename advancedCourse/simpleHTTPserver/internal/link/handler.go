@@ -3,6 +3,7 @@ package link
 import (
 	"GolangCourse/advancedCourse/simpleHTTPserver/configs"
 	res "GolangCourse/advancedCourse/simpleHTTPserver/pkg"
+	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/event"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/middleware"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/req"
 	"fmt"
@@ -16,17 +17,20 @@ import (
 // LinkHandlerDeps структура, которая содержит зависимости для LinkHandler
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
+	EventBus       *event.EventBus
 	Config         *configs.Config
 }
 
 // LinkHandler структура, которая будет обрабатывать запросы на /link CRUD
 type LinkHandler struct {
 	LinkRepository *LinkRepository
+	EventBus       *event.EventBus
 }
 
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	handler := &LinkHandler{
 		LinkRepository: deps.LinkRepository,
+		EventBus:       deps.EventBus,
 	}
 	router.HandleFunc("POST /link", handler.Create())
 	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
@@ -84,9 +88,12 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 			res.JSONRes(w, err.Error(), http.StatusNotFound)
 			return
 		}
-
+		// Отправка события идёт в горутине, чтобы редирект мог уйти сразу.
+		go handler.EventBus.Publish(event.Event{
+			Type: event.EventLinkVisited,
+			Data: link.ID,
+		})
 		http.Redirect(w, r, link.URL, http.StatusTemporaryRedirect)
-
 	}
 }
 

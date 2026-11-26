@@ -1,15 +1,18 @@
 package link
 
 import (
+	"GolangCourse/advancedCourse/simpleHTTPserver/internal/stat"
 	"math/rand/v2"
 
 	"gorm.io/gorm"
 )
 
+// Link хранит исходный URL, короткий хэш и связанные дневные счётчики.
 type Link struct {
 	gorm.Model
-	URL  string `json:"url"`
-	Hash string `json:"hash" gorm:"uniqueIndex"`
+	URL   string      `json:"url"`
+	Hash  string      `json:"hash" gorm:"uniqueIndex"`
+	Stats []stat.Stat `gorm:"constraint:OnUpdate:CASCADE,OnDelete: SET NULL"`
 }
 
 func NewLink(url string) *Link {

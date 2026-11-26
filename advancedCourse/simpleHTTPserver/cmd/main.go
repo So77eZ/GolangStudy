@@ -4,8 +4,10 @@ import (
 	"GolangCourse/advancedCourse/simpleHTTPserver/configs"
 	"GolangCourse/advancedCourse/simpleHTTPserver/internal/auth"
 	"GolangCourse/advancedCourse/simpleHTTPserver/internal/link"
+	"GolangCourse/advancedCourse/simpleHTTPserver/internal/stat"
 	"GolangCourse/advancedCourse/simpleHTTPserver/internal/user"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/db"
+	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/event"
 	"GolangCourse/advancedCourse/simpleHTTPserver/pkg/middleware"
 	"fmt"
 	"net/http"
@@ -20,13 +22,20 @@ func main() {
 
 	db := db.NewDb(conf)
 	router := http.NewServeMux()
+	// Обработчик редиректов и сервис статистики используют одну шину событий.
+	eventBus := event.NewEventBus()
 
 	//Repositories
 	linkRepository := link.NewLinkRepository(db)
 	userRepository := user.NewUserRepository(db)
+	statRepository := stat.NewStatRepository(db)
 
 	//Services
 	authService := auth.NewAuthService(userRepository)
+	statService := stat.NewStatService(&stat.StatServiceDeps{
+		EventBus:       eventBus,
+		StatRepository: statRepository,
+	})
 
 	//Handler
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
@@ -35,6 +44,7 @@ func main() {
 
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
+		EventBus:       eventBus,
 		Config:         conf})
 
 	user.NewUserHandler(router, user.UserHandlerDeps{
@@ -53,6 +63,10 @@ func main() {
 	}
 
 	fmt.Println("server is listening on port: 8081")
+
+	// Запускаем один цикл чтения событий на весь сервер.
+	go statService.AddClick()
+
 	error := server.ListenAndServe()
 	if error != nil {
 		panic(error)
